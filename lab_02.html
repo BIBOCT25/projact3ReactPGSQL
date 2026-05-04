@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №2 — Первый сервер</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0d2137 0%, #0a3d62 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #b8d8f8 100%); }
+  .lab-badge { display: inline-block; background: rgba(88,166,255,.15); border: 1px solid rgba(88,166,255,.4); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  .theme-btn:hover { background: rgba(255,255,255,.2); }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .important { background: rgba(248,81,73,.07); border-left: 3px solid var(--red); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .tip { background: rgba(63,185,80,.07); border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(210,153,34,.07); border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .ann { color: #3fb950; } .prop { color: #79c0ff; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  /* Файл-заголовок */
+  .file-header { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--accent); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  /* Линия с аннотацией */
+  .line-ann { display: block; }
+  .line-ann .ann-text { float: right; color: #3fb950; font-size: 12px; opacity: .8; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  .ref-table-wrap { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; }
+  .ref-table-wrap table { margin: 0; }
+  .ref-table-wrap th { position: sticky; top: 0; z-index: 1; }
+  .cat-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .cat-Кнопки      { background: rgba(88,166,255,.15); color: #58a6ff; }
+  .cat-Карточки    { background: rgba(188,140,255,.15); color: #bc8cff; }
+  .cat-Фильтры     { background: rgba(210,153,34,.15);  color: #d29922; }
+  .cat-Корзина     { background: rgba(63,185,80,.15);   color: #3fb950; }
+  .cat-Таймеры     { background: rgba(248,81,73,.15);   color: #f85149; }
+  .cat-Формы       { background: rgba(255,166,87,.15);  color: #ffa657; }
+  .cat-Навигация   { background: rgba(88,166,255,.12);  color: #79c0ff; }
+  .cat-Слайдеры    { background: rgba(188,140,255,.12); color: #d2a8ff; }
+  .cat-Уведомления { background: rgba(63,185,80,.12);   color: #56d364; }
+  .cat-UX-мелочи   { background: rgba(255,166,87,.12);  color: #ffa657; }
+  .cat-FAQ         { background: rgba(210,153,34,.12);  color: #e3b341; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 6px 0; color: var(--text); font-size: 14.5px; }
+  .tasks .star { color: var(--yellow); }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--accent); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--accent); }
+  /* Метка «что делает строка» */
+  .explain { color: var(--text-muted); font-size: 13px; padding: 4px 0 12px 0; display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">Лабораторная работа</div>
+  <h1>№2 — Первый сервер на Express</h1>
+  <p>Подключаем Prisma к PostgreSQL, создаём таблицы и пишем первые API-роуты</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html" class="active">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ЦЕЛЬ ── -->
+  <section>
+    <div class="section-label">Цель работы</div>
+    <h2>🎯 Что мы сделаем</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--green)">✅ В итоге получим</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li>Работающий Express-сервер на порту 3001</li>
+          <li>Таблицы <code class="inline">products</code> и <code class="inline">cart_items</code> в PostgreSQL</li>
+          <li>Три API-эндпоинта: GET список, GET один, POST добавить в корзину</li>
+          <li>Проверим через браузер и Postman</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--accent)">🔑 Новые понятия</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li><strong>Роут</strong> — URL + метод = обработчик</li>
+          <li><strong>Prisma schema</strong> — описание таблиц</li>
+          <li><strong>Миграция</strong> — применение схемы к БД</li>
+          <li><strong>async/await</strong> — асинхронный запрос к БД</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧТО ТАКОЕ РОУТ ── -->
+  <section>
+    <div class="section-label">Теория</div>
+    <h2>🔌 Что такое REST API и роуты</h2>
+
+    <div class="theory">
+      <strong>REST API</strong> — это набор URL-адресов (роутов), по которым React обращается к серверу.
+      Каждый роут = адрес + HTTP-метод.
+    </div>
+
+    <div class="card">
+      <table>
+        <tr><th>Метод</th><th>URL</th><th>Что делает</th><th>Аналогия</th></tr>
+        <tr><td style="color:var(--green)"><strong>GET</strong></td><td><code class="inline">/api/products</code></td><td>Получить список товаров</td><td>Прочитать меню</td></tr>
+        <tr><td style="color:var(--green)"><strong>GET</strong></td><td><code class="inline">/api/products/5</code></td><td>Получить товар с id=5</td><td>Выбрать одно блюдо</td></tr>
+        <tr><td style="color:var(--accent)"><strong>POST</strong></td><td><code class="inline">/api/cart</code></td><td>Добавить товар в корзину</td><td>Сделать заказ</td></tr>
+        <tr><td style="color:var(--yellow)"><strong>PATCH</strong></td><td><code class="inline">/api/cart/3</code></td><td>Изменить кол-во в позиции корзины</td><td>Изменить заказ</td></tr>
+        <tr><td style="color:var(--red)"><strong>DELETE</strong></td><td><code class="inline">/api/cart/3</code></td><td>Удалить позицию из корзины</td><td>Отменить блюдо</td></tr>
+      </table>
+    </div>
+
+    <div class="tip">
+      <strong>💡 Как это работает:</strong><br>
+      React делает <code class="inline">fetch('http://localhost:3001/api/products')</code> →
+      Express получает GET-запрос к <code class="inline">/api/products</code> →
+      Prisma выполняет <code class="inline">SELECT * FROM products</code> →
+      Express отвечает JSON-массивом →
+      React получает данные и рисует карточки товаров.
+    </div>
+  </section>
+
+  <!-- ── PRISMA SCHEMA ── -->
+  <section>
+    <div class="section-label">Шаг 1</div>
+    <h2>📐 Описываем таблицы в Prisma</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Инициализировать Prisma</h4>
+        <p>В папке <code class="inline">backend/</code> выполнить команду:</p>
+        <pre><code>npx prisma init
+<span class="cmt"># Команда создаст два файла:
+# prisma/schema.prisma  — описание таблиц
+# .env                  — переменные окружения (пароль БД)</span>
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Настроить файл .env</h4>
+        <p>Откройте файл <code class="inline">.env</code> и замените строку с DATABASE_URL на свои данные:</p>
+        <div class="file-header"><span>.env</span></div>
+        <pre><code><span class="cmt"># Формат: postgresql://ПОЛЬЗОВАТЕЛЬ:ПАРОЛЬ@ХОСТ:ПОРТ/БАЗА</span>
+<span class="prop">DATABASE_URL</span>=<span class="str">"postgresql://shop_user:mypassword123@localhost:5432/shop_db"</span>
+<span class="prop">PORT</span>=<span class="num">3001</span>
+</code></pre>
+        <div class="important">
+          <strong>⚠️ Файл .env — секретный!</strong><br>
+          Никогда не загружайте <code class="inline">.env</code> на GitHub. Добавьте в <code class="inline">.gitignore</code> строку <code class="inline">.env</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Описать таблицы в schema.prisma</h4>
+        <p>Каждая модель Prisma = одна таблица в PostgreSQL. Откройте <code class="inline">prisma/schema.prisma</code>:</p>
+        <div class="file-header"><span>prisma/schema.prisma</span></div>
+        <pre><code><span class="cmt">// Настройки генератора — генерировать TypeScript-клиент</span>
+generator client {
+  provider = <span class="str">"prisma-client-js"</span>
+}
+
+<span class="cmt">// Настройки подключения к базе данных</span>
+datasource db {
+  provider = <span class="str">"postgresql"</span>     <span class="cmt">// тип базы — PostgreSQL</span>
+  url      = env(<span class="str">"DATABASE_URL"</span>) <span class="cmt">// URL берём из .env</span>
+}
+
+<span class="cmt">// Модель = таблица products</span>
+model Product {
+  id       Int     @id @default(autoincrement()) <span class="cmt">// первичный ключ, автоинкремент</span>
+  name     String                                <span class="cmt">// название товара</span>
+  price    Float                                 <span class="cmt">// цена</span>
+  oldPrice Float?                                <span class="cmt">// старая цена (? = необязательное поле)</span>
+  stock    Int     @default(0)                   <span class="cmt">// количество на складе</span>
+
+  cartItems CartItem[] <span class="cmt">// связь: у товара может быть много позиций в корзинах</span>
+}
+
+<span class="cmt">// Модель = таблица cart_items</span>
+model CartItem {
+  id        Int @id @default(autoincrement())
+  qty       Int @default(1) <span class="cmt">// количество единиц</span>
+
+  productId Int            <span class="cmt">// ID товара — внешний ключ</span>
+  userId    Int            <span class="cmt">// ID пользователя (добавим пользователя позже)</span>
+
+  product   Product @relation(fields: [productId], references: [id])
+  <span class="cmt">// ↑ связь: поле productId ссылается на поле id в таблице Product</span>
+
+  @@unique([userId, productId]) <span class="cmt">// один пользователь не может добавить один товар дважды</span>
+}
+</code></pre>
+        <span class="explain">
+          <strong>Что значит <code class="inline">@@unique([userId, productId])</code>?</strong>
+          Это составной уникальный индекс. Пользователь с id=1 может иметь товар с id=5 в корзине только один раз.
+          Если хочет добавить ещё — нужно увеличить qty, а не создавать новую строку.
+        </span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Применить схему к базе данных (миграция)</h4>
+        <p>Миграция — это создание таблиц в PostgreSQL на основе нашей схемы:</p>
+        <pre><code>npx prisma migrate dev --name init
+<span class="cmt"># --name init — название миграции (можно любое)
+# Команда:
+#  1. Создаст файл migrations/xxxx_init/migration.sql с SQL-командами
+#  2. Выполнит SQL в базе данных — создаст таблицы
+#  3. Сгенерирует TypeScript-клиент Prisma</span>
+
+<span class="cmt"># Проверить — открыть Prisma Studio (визуальный просмотр БД):</span>
+npx prisma studio
+<span class="cmt"># Откроется браузер с таблицами, можно добавить тестовые данные</span>
+</code></pre>
+        <div class="tip">
+          <strong>💡 Prisma Studio</strong> — это как pgAdmin, но проще. Открывается по адресу <code class="inline">http://localhost:5555</code>. Там можно просматривать и редактировать данные без SQL.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── СЕРВЕР ── -->
+  <section>
+    <div class="section-label">Шаг 2</div>
+    <h2>🖥️ Пишем Express-сервер</h2>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Создать точку входа сервера</h4>
+        <p>Создайте файл <code class="inline">src/index.ts</code>:</p>
+        <div class="file-header"><span>backend/src/index.ts</span></div>
+        <pre><code><span class="kw">import</span> express <span class="kw">from</span> <span class="str">'express'</span>         <span class="cmt">// импортируем Express</span>
+<span class="kw">import</span> cors    <span class="kw">from</span> <span class="str">'cors'</span>            <span class="cmt">// CORS — разрешаем запросы с других доменов</span>
+<span class="kw">import</span> dotenv  <span class="kw">from</span> <span class="str">'dotenv'</span>          <span class="cmt">// читаем .env файл</span>
+<span class="kw">import</span> { PrismaClient } <span class="kw">from</span> <span class="str">'@prisma/client'</span>
+
+dotenv.config() <span class="cmt">// загрузить переменные из .env в process.env</span>
+
+<span class="kw">export const</span> prisma = <span class="kw">new</span> <span class="cls">PrismaClient</span>() <span class="cmt">// единственный экземпляр на весь сервер</span>
+
+<span class="kw">const</span> app = express()
+
+<span class="cmt">// Middleware — функции, которые обрабатывают каждый запрос:</span>
+app.use(cors({
+  origin: <span class="str">'http://localhost:5173'</span> <span class="cmt">// разрешаем только запросы от нашего React</span>
+}))
+app.use(express.json()) <span class="cmt">// автоматически парсить JSON из тела запроса</span>
+
+<span class="cmt">// Импортируем роуты (создадим в следующем шаге)</span>
+<span class="kw">import</span> productsRouter <span class="kw">from</span> <span class="str">'./routes/products'</span>
+<span class="kw">import</span> cartRouter     <span class="kw">from</span> <span class="str">'./routes/cart'</span>
+
+app.use(<span class="str">'/api/products'</span>, productsRouter) <span class="cmt">// все роуты товаров начинаются с /api/products</span>
+app.use(<span class="str">'/api/cart'</span>,     cartRouter)     <span class="cmt">// все роуты корзины начинаются с /api/cart</span>
+
+<span class="cmt">// Запустить сервер на порту из .env (или 3001 по умолчанию)</span>
+<span class="kw">const</span> PORT = process.env.PORT || <span class="num">3001</span>
+app.listen(PORT, () =&gt; {
+  console.log(<span class="str">`✅ Сервер запущен: http://localhost:<span class="kw">${PORT}</span>`</span>)
+})
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Создать роуты для товаров</h4>
+        <p>Создайте файл <code class="inline">src/routes/products.ts</code>:</p>
+        <div class="file-header"><span>backend/src/routes/products.ts</span></div>
+        <pre><code><span class="kw">import</span> { Router } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+
+<span class="kw">const</span> router = <span class="fn">Router</span>() <span class="cmt">// создаём отдельный роутер для товаров</span>
+
+<span class="cmt">// GET /api/products — получить все товары</span>
+router.get(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="cmt">// async — потому что запрос к БД занимает время (асинхронная операция)</span>
+  <span class="kw">try</span> {
+    <span class="kw">const</span> products = <span class="kw">await</span> prisma.product.<span class="fn">findMany</span>()
+    <span class="cmt">// prisma.product.findMany() = SELECT * FROM products</span>
+    <span class="cmt">// await — ждём пока PostgreSQL вернёт результат</span>
+
+    res.json(products) <span class="cmt">// отправляем массив товаров клиенту в формате JSON</span>
+  } <span class="kw">catch</span> (error) {
+    res.status(<span class="num">500</span>).json({ error: <span class="str">'Ошибка сервера'</span> })
+    <span class="cmt">// 500 = Internal Server Error — что-то пошло не так</span>
+  }
+})
+
+<span class="cmt">// GET /api/products/:id — получить один товар по ID</span>
+router.get(<span class="str">'/:id'</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> id = <span class="fn">Number</span>(req.params.id) <span class="cmt">// req.params.id — строка из URL, конвертируем в число</span>
+
+  <span class="kw">const</span> product = <span class="kw">await</span> prisma.product.<span class="fn">findUnique</span>({
+    where: { id } <span class="cmt">// WHERE id = :id</span>
+  })
+
+  <span class="kw">if</span> (!product) {
+    <span class="kw">return</span> res.status(<span class="num">404</span>).json({ error: <span class="str">'Товар не найден'</span> })
+    <span class="cmt">// 404 = Not Found</span>
+  }
+
+  res.json(product)
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>Создать роуты для корзины</h4>
+        <p>Создайте файл <code class="inline">src/routes/cart.ts</code>:</p>
+        <div class="file-header"><span>backend/src/routes/cart.ts</span></div>
+        <pre><code><span class="kw">import</span> { Router } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+
+<span class="kw">const</span> router = <span class="fn">Router</span>()
+
+<span class="cmt">// POST /api/cart — добавить товар в корзину</span>
+router.post(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> { productId } = req.body <span class="cmt">// получаем productId из тела запроса</span>
+  <span class="kw">const</span> userId = <span class="num">1</span> <span class="cmt">// пока используем фиктивного пользователя (авторизацию добавим в лаб.5)</span>
+
+  <span class="kw">const</span> item = <span class="kw">await</span> prisma.cartItem.<span class="fn">upsert</span>({
+    <span class="cmt">// upsert = UPDATE если существует, INSERT если нет</span>
+    where: {
+      userId_productId: { userId, productId } <span class="cmt">// ищем по составному уникальному ключу</span>
+    },
+    update: {
+      qty: { increment: <span class="num">1</span> } <span class="cmt">// если товар уже в корзине — увеличиваем qty на 1</span>
+    },
+    create: {
+      userId, productId, qty: <span class="num">1</span> <span class="cmt">// если нет — создаём новую запись</span>
+    },
+    include: { product: <span class="kw">true</span> } <span class="cmt">// в ответе включить связанный товар (JOIN)</span>
+  })
+
+  res.status(<span class="num">201</span>).json(item) <span class="cmt">// 201 = Created</span>
+})
+
+<span class="cmt">// GET /api/cart — получить всю корзину пользователя</span>
+router.get(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> userId = <span class="num">1</span>
+
+  <span class="kw">const</span> items = <span class="kw">await</span> prisma.cartItem.<span class="fn">findMany</span>({
+    where: { userId },     <span class="cmt">// WHERE user_id = 1</span>
+    include: { product: <span class="kw">true</span> } <span class="cmt">// JOIN с таблицей products</span>
+  })
+
+  <span class="cmt">// Считаем сумму корзины на сервере</span>
+  <span class="kw">const</span> total = items.<span class="fn">reduce</span>((sum, i) =&gt; sum + i.product.price * i.qty, <span class="num">0</span>)
+
+  res.json({ items, total })
+})
+
+<span class="cmt">// DELETE /api/cart/:id — удалить позицию из корзины</span>
+router.delete(<span class="str">'/:id'</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> id = <span class="fn">Number</span>(req.params.id)
+  <span class="kw">await</span> prisma.cartItem.<span class="fn">delete</span>({ where: { id } })
+  res.json({ success: <span class="kw">true</span> })
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ТЕСТИРОВАНИЕ ── -->
+  <section>
+    <div class="section-label">Шаг 3</div>
+    <h2>🧪 Тестируем API</h2>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h4>Добавить тестовые данные и запустить сервер</h4>
+        <pre><code><span class="cmt"># Сначала добавьте товары через Prisma Studio:</span>
+npx prisma studio
+<span class="cmt"># Откроется в браузере, нажмите "Add record" в таблице Product
+# Добавьте 2-3 товара вручную</span>
+
+<span class="cmt"># Или создайте файл backend/seed.ts для заполнения тестовыми данными:</span>
+</code></pre>
+        <div class="file-header"><span>backend/seed.ts</span></div>
+        <pre><code><span class="kw">import</span> { PrismaClient } <span class="kw">from</span> <span class="str">'@prisma/client'</span>
+<span class="kw">const</span> prisma = <span class="kw">new</span> <span class="cls">PrismaClient</span>()
+
+<span class="kw">async function</span> <span class="fn">main</span>() {
+  <span class="kw">await</span> prisma.product.<span class="fn">createMany</span>({
+    data: [
+      { name: <span class="str">'Кроссовки Nike'</span>,    price: <span class="num">4990</span>, oldPrice: <span class="num">6500</span>, stock: <span class="num">15</span> },
+      { name: <span class="str">'Футболка Adidas'</span>,   price: <span class="num">1290</span>,               stock: <span class="num">42</span> },
+      { name: <span class="str">'Рюкзак Herschel'</span>,   price: <span class="num">3490</span>, oldPrice: <span class="num">4200</span>, stock: <span class="num">8</span>  },
+    ]
+  })
+  console.log(<span class="str">'✅ Тестовые данные добавлены'</span>)
+}
+
+main().<span class="fn">finally</span>(() =&gt; prisma.$<span class="fn">disconnect</span>())
+</code></pre>
+        <pre><code><span class="cmt"># Запустить seed:</span>
+npx ts-node seed.ts
+
+<span class="cmt"># Запустить сервер:</span>
+npx nodemon src/index.ts
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-body">
+        <h4>Проверить API в браузере и Postman</h4>
+        <div class="card-grid">
+          <div class="card">
+            <h3 style="margin-top:0;font-size:14px">В браузере (только GET):</h3>
+            <p style="font-size:13px;color:var(--text-muted)">Откройте URL в адресной строке:</p>
+            <pre style="margin:0;font-size:12px"><code>http://localhost:3001/api/products
+http://localhost:3001/api/products/1
+</code></pre>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0;font-size:14px">В Postman (все методы):</h3>
+            <pre style="margin:0;font-size:12px"><code><span class="cmt">POST</span> http://localhost:3001/api/cart
+Body (JSON):
+{
+  "productId": 1
+}
+</code></pre>
+          </div>
+        </div>
+
+        <div class="tip">
+          <strong>📱 Postman</strong> — бесплатная программа для тестирования API. Скачать: <code class="inline">postman.com</code><br>
+          Позволяет отправлять POST/PATCH/DELETE запросы с телом (body) — то, что браузер не умеет из адресной строки.
+        </div>
+
+        <h3>Ожидаемые ответы:</h3>
+        <pre><code><span class="cmt">// GET /api/products — массив товаров:</span>
+[
+  { <span class="str">"id"</span>: <span class="num">1</span>, <span class="str">"name"</span>: <span class="str">"Кроссовки Nike"</span>, <span class="str">"price"</span>: <span class="num">4990</span>, <span class="str">"stock"</span>: <span class="num">15</span> },
+  { <span class="str">"id"</span>: <span class="num">2</span>, <span class="str">"name"</span>: <span class="str">"Футболка Adidas"</span>, <span class="str">"price"</span>: <span class="num">1290</span>, <span class="str">"stock"</span>: <span class="num">42</span> }
+]
+
+<span class="cmt">// POST /api/cart — добавленная позиция корзины:</span>
+{
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"qty"</span>: <span class="num">1</span>,
+  <span class="str">"productId"</span>: <span class="num">1</span>,
+  <span class="str">"userId"</span>: <span class="num">1</span>,
+  <span class="str">"product"</span>: { <span class="str">"id"</span>: <span class="num">1</span>, <span class="str">"name"</span>: <span class="str">"Кроссовки Nike"</span>, ... }
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ИТОГОВЫЙ КОД ── -->
+  <section>
+    <div class="section-label">Итог</div>
+    <h2>📋 Итоговая структура файлов</h2>
+    <pre><code>backend/
+├── prisma/
+│   ├── schema.prisma        <span class="cmt">← описание таблиц</span>
+│   └── migrations/
+│       └── 20xx_init/
+│           └── migration.sql  <span class="cmt">← сгенерированный SQL</span>
+├── src/
+│   ├── index.ts             <span class="cmt">← точка входа: Express + Prisma</span>
+│   └── routes/
+│       ├── products.ts      <span class="cmt">← GET /api/products, GET /api/products/:id</span>
+│       └── cart.ts          <span class="cmt">← GET /api/cart, POST /api/cart, DELETE /api/cart/:id</span>
+├── seed.ts                  <span class="cmt">← тестовые данные</span>
+├── .env                     <span class="cmt">← DATABASE_URL (в .gitignore!)</span>
+└── package.json
+</code></pre>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>Выполните все шаги 1–9: инициализируйте Prisma, создайте миграцию, заполните тестовыми данными, запустите сервер.</li>
+        <li>Проверьте <code class="inline">GET /api/products</code> в браузере — убедитесь что видите JSON с товарами.</li>
+        <li>В Postman сделайте <code class="inline">POST /api/cart</code> с <code class="inline">{ "productId": 1 }</code>. Затем <code class="inline">GET /api/cart</code> — убедитесь, что товар появился.</li>
+        <li>Добавьте в схему Prisma поле <code class="inline">description String?</code> в модель <code class="inline">Product</code>. Запустите новую миграцию: <code class="inline">npx prisma migrate dev --name add-description</code>.</li>
+        <li class="star">⭐ Добавьте роут <code class="inline">PATCH /api/cart/:id</code> — изменение количества товара. Тело запроса: <code class="inline">{ "qty": 3 }</code>.</li>
+        <li class="star">⭐ Добавьте роут <code class="inline">GET /api/cart/count</code> — возвращает только <code class="inline">{ "count": 5 }</code> (сумму всех qty в корзине).</li>
+        <li class="star">⭐⭐ Что произойдёт если сделать <code class="inline">POST /api/cart</code> с одним и тем же <code class="inline">productId</code> дважды? Почему qty станет 2, а не появятся две записи?</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_01.html" class="btn-nav">← Лаб. №1</a>
+    <div class="progress-bar">
+      Лаб. работа 2 из 8
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_03.html" class="btn-nav primary">Лаб. №3 →</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  function toggleTheme() {
+    applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  }
+  btn.onclick = toggleTheme;
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>

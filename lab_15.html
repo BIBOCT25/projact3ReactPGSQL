@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №15 — Избранное и бургер-меню</title>
+<style>
+  :root {
+    --bg:#0d1117;--surface:#161b22;--card:#1c2230;--border:#30363d;
+    --text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;
+    --green:#3fb950;--yellow:#d29922;--red:#f85149;
+    --purple:#bc8cff;--orange:#ffa657;--code-bg:#0d1117;
+    --teal:#2dd4bf;--emerald:#34d399;--pink:#f472b6;
+  }
+  body.light {
+    --bg:#f6f8fa;--surface:#ffffff;--card:#f0f6fc;--border:#d0d7de;
+    --text:#1f2328;--text-muted:#636c76;--accent:#0969da;
+    --green:#1a7f37;--yellow:#9a6700;--red:#d1242f;
+    --purple:#8250df;--orange:#bc4c00;--code-bg:#f6f8fa;
+    --teal:#0d9488;--emerald:#059669;--pink:#db2777;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;transition:background .3s,color .3s}
+  header{background:linear-gradient(135deg,#0a1628 0%,#1a0a1a 100%);padding:40px 24px 32px;text-align:center;border-bottom:1px solid var(--border);position:relative}
+  body.light header{background:linear-gradient(135deg,#dbeafe 0%,#fce7f3 100%)}
+  .lab-badge{display:inline-block;background:rgba(244,114,182,.15);border:1px solid rgba(244,114,182,.4);color:var(--pink);padding:4px 14px;border-radius:20px;font-size:13px;margin-bottom:12px;letter-spacing:.5px}
+  header h1{font-size:clamp(20px,3.5vw,32px);color:var(--text);margin-bottom:8px}
+  header p{color:var(--text-muted);font-size:15px;max-width:680px;margin:0 auto}
+  .nav-labs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .nav-labs a{padding:5px 11px;border-radius:8px;font-size:13px;text-decoration:none;background:rgba(255,255,255,.07);color:var(--text-muted);border:1px solid var(--border);transition:.2s}
+  .nav-labs a:hover,.nav-labs a.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+  .theme-btn{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--text);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
+  main{max-width:860px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:52px}
+  .section-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+  h2{font-size:22px;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  h3{font-size:17px;color:var(--accent);margin:24px 0 10px}
+  p{color:var(--text-muted);font-size:15px;margin-bottom:12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+  .theory{background:rgba(88,166,255,.06);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .theory strong{color:var(--accent)}
+  .tip{background:rgba(63,185,80,.07);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .warn{background:rgba(210,153,34,.07);border-left:3px solid var(--yellow);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:20px;overflow-x:auto;font-size:13.5px;line-height:1.65;margin-bottom:16px;tab-size:2}
+  code{font-family:'Cascadia Code','Fira Code','Consolas',monospace}
+  .inline{background:var(--card);padding:2px 7px;border-radius:4px;font-family:monospace;font-size:13px}
+  .kw{color:#ff7b72}.fn{color:#d2a8ff}.str{color:#a5d6ff}
+  .cmt{color:#8b949e;font-style:italic}.num{color:#79c0ff}
+  .cls{color:#ffa657}.tag{color:#7ee787}.attr{color:#ffa657}
+  .step{display:flex;gap:16px;align-items:flex-start;margin-bottom:32px}
+  .step-num{min-width:36px;height:36px;background:var(--pink);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;margin-top:2px}
+  .step-body{flex:1}
+  .step-body h4{font-size:16px;color:var(--text);margin-bottom:8px}
+  .step-body p{color:var(--text-muted);margin-bottom:10px;font-size:14.5px}
+  .file-header{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:10px 10px 0 0;padding:10px 16px;font-size:13px;color:var(--text-muted)}
+  .file-header span{color:var(--pink);font-family:monospace}
+  .file-header+pre{border-radius:0 0 10px 10px;margin-top:0}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  th{background:var(--card);color:var(--text-muted);font-size:12px;letter-spacing:.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border)}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .tasks{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px}
+  .tasks h3{color:var(--yellow);margin-top:0}
+  .tasks ol{padding-left:20px}
+  .tasks li{padding:8px 0;color:var(--text);font-size:14.5px;border-bottom:1px solid var(--border)}
+  .tasks li:last-child{border-bottom:none}
+  .bottom-nav{display:flex;justify-content:space-between;align-items:center;margin-top:60px;padding-top:24px;border-top:1px solid var(--border)}
+  .btn-nav{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:.2s;border:2px solid var(--accent);color:var(--accent);background:transparent}
+  .btn-nav:hover{background:var(--accent);color:#fff}
+  .btn-nav.primary{background:var(--pink);border-color:var(--pink);color:#fff}
+  .btn-nav.primary:hover{opacity:.85}
+  .progress-bar{text-align:center;color:var(--text-muted);font-size:13px}
+  .progress-dots{display:flex;gap:5px;justify-content:center;margin-top:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .dot.done{background:var(--green)}
+  .dot.active{background:var(--pink);box-shadow:0 0 6px var(--pink)}
+  /* Демо избранного */
+  .demo-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px 10px 0 0}
+  .demo-header h3{font-size:16px;font-weight:700;margin:0;color:var(--text)}
+  .demo-count{font-size:12px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);padding:2px 10px;border-radius:20px}
+  .demo-clear{font-size:12px;color:var(--red);border:1px solid var(--red);background:transparent;padding:4px 10px;border-radius:6px;cursor:pointer}
+  .fav-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px}
+  .fav-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative}
+  .fav-img{height:80px;background:linear-gradient(135deg,#1a2740,#0d1117);display:flex;align-items:center;justify-content:center;font-size:26px;position:relative}
+  .fav-remove{position:absolute;top:6px;left:6px;width:22px;height:22px;background:rgba(239,68,68,.85);border:none;border-radius:50%;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .fav-body{padding:8px 10px}
+  .fav-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fav-price{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .fav-btn{width:100%;padding:5px 0;background:#1d4ed8;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer;font-weight:600}
+  /* Демо бургера */
+  .demo-nav{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;gap:12px;margin-bottom:12px}
+  .demo-logo{font-weight:700;font-size:15px;color:var(--text)}
+  .demo-spacer{flex:1}
+  .burger-btn{background:rgba(88,166,255,.1);border:1px solid var(--accent);border-radius:7px;color:var(--accent);padding:5px 10px;font-size:17px;cursor:pointer;font-weight:700}
+  .drawer-wrap{position:relative;overflow:hidden;border-radius:10px;border:1px solid var(--border)}
+  .drawer-bg{background:var(--surface);padding:20px 16px;display:flex;flex-direction:column;gap:4px;filter:blur(2px);opacity:.5}
+  .drawer-panel{position:absolute;top:0;right:0;bottom:0;width:180px;background:var(--card);border-left:1px solid var(--border);padding:12px 0;display:flex;flex-direction:column}
+  .drawer-link{padding:11px 20px;font-size:13px;color:var(--text);font-weight:500}
+  .drawer-link.active-link{color:var(--accent);background:rgba(88,166,255,.08);border-left:3px solid var(--accent)}
+  .state-pill{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;margin-left:6px}
+  .pill-open{background:rgba(63,185,80,.15);color:var(--green);border:1px solid var(--green)}
+  .pill-closed{background:rgba(248,81,73,.15);color:var(--red);border:1px solid var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">❤️ Лаб. работа №15</div>
+  <h1>Избранное и бургер-меню</h1>
+  <p>Страница <code class="inline">FavoritesPage</code> с управлением списком, хук <code class="inline">useMobile</code>, адаптивная шапка с drawer-меню</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">01</a><a href="lab_02.html">02</a><a href="lab_03.html">03</a>
+    <a href="lab_04.html">04</a><a href="lab_05.html">05</a><a href="lab_06.html">06</a>
+    <a href="lab_07.html">07</a><a href="lab_08.html">08</a><a href="lab_09.html">09</a>
+    <a href="lab_10.html">10</a><a href="lab_11.html">11</a><a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a><a href="lab_14.html">14</a><a href="lab_15.html" class="active">15</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ═══ ЦЕЛЬ ═══ -->
+<section>
+  <div class="section-label">Цель работы</div>
+  <h2>Что реализуем</h2>
+
+  <div class="theory">
+    <strong>Задача:</strong> добавить полноценную страницу избранного, в которой пользователь видит все сохранённые товары, может удалять их по одному или очистить всё сразу, добавить понравившийся товар прямо в корзину. Параллельно сделать шапку адаптивной: на мобильных экранах обычная навигация прячется, появляется кнопка <code class="inline">☰</code>, по нажатию выезжает боковое drawer-меню с полным набором ссылок.
+  </div>
+
+  <table>
+    <thead><tr><th>Фича</th><th>Что включает</th></tr></thead>
+    <tbody>
+      <tr><td>❤️ FavoritesPage</td><td>Сетка избранных товаров, удаление по одному (кнопка ✕ на фото), «Очистить всё», «В корзину», skeleton при загрузке, пустой state с redirect-ссылкой, счётчик товаров, redirect на /auth для гостей</td></tr>
+      <tr><td>📱 useMobile</td><td>Хук <code class="inline">useState + useEffect + resize-listener</code> — возвращает <code class="inline">isMobile</code> при ширине &lt; 768px</td></tr>
+      <tr><td>☰ Бургер-меню</td><td>Кнопка в Header, видна только на мобильных; открывает drawer справа с плавной CSS-анимацией (<code class="inline">transform: translateX</code>), затемнённый оверлей, все ссылки с active-state, блок профиля внизу</td></tr>
+      <tr><td>🔗 Навигация</td><td>Добавлена ссылка «❤️ Избранное» в nav-массив, роут <code class="inline">/favorites</code> в App.tsx</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Демо -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+    <div>
+      <p style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Превью — Список избранного</p>
+      <div class="demo-header">
+        <h3>❤️ Избранное</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="demo-count">3 товара</span>
+          <button class="demo-clear">Очистить всё</button>
+        </div>
+      </div>
+      <div class="fav-grid">
+        <div class="fav-card">
+          <div class="fav-img">📱<button class="fav-remove">✕</button></div>
+          <div class="fav-body">
+            <div class="fav-name">iPhone 16 Pro</div>
+            <div class="fav-price">119 990 ₽</div>
+            <button class="fav-btn">🛒 В корзину</button>
+          </div>
+        </div>
+        <div class="fav-card">
+          <div class="fav-img">💻<button class="fav-remove">✕</button></div>
+          <div class="fav-body">
+            <div class="fav-name">MacBook Air M3</div>
+            <div class="fav-price">149 990 ₽</div>
+            <button class="fav-btn">🛒 В корзину</button>
+          </div>
+        </div>
+        <div class="fav-card">
+          <div class="fav-img">🎧<button class="fav-remove">✕</button></div>
+          <div class="fav-body">
+            <div class="fav-name">AirPods Pro 2</div>
+            <div class="fav-price">24 990 ₽</div>
+            <button class="fav-btn">🛒 В корзину</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Превью — Бургер-меню (мобильный)</p>
+      <div class="demo-nav">
+        <span class="demo-logo">🛒 Shop</span>
+        <span class="demo-spacer"></span>
+        <button class="burger-btn">☰</button>
+      </div>
+      <div class="drawer-wrap" style="height:220px">
+        <div class="drawer-bg">
+          <div style="height:14px;background:var(--border);border-radius:4px;margin-bottom:8px;width:60%"></div>
+          <div style="height:14px;background:var(--border);border-radius:4px;margin-bottom:8px;width:80%"></div>
+          <div style="height:14px;background:var(--border);border-radius:4px;width:45%"></div>
+        </div>
+        <div class="drawer-panel">
+          <div class="drawer-link active-link">🏠 Товары</div>
+          <div class="drawer-link">❤️ Избранное</div>
+          <div class="drawer-link">📦 Заказы</div>
+          <div class="drawer-link">❓ FAQ</div>
+          <div style="border-top:1px solid var(--border);margin-top:auto;padding:10px 20px">
+            <div style="font-size:12px;color:var(--text-muted)">👤 user@mail.ru</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Открыто состояние <span class="state-pill pill-open">menuOpen = true</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ШАГ 1: useMobile ═══ -->
+<section>
+  <div class="section-label">Шаг 1 — Хук useMobile</div>
+  <h2>Отслеживание размера экрана</h2>
+
+  <div class="theory">
+    <strong>Идея:</strong> в React нет встроенного способа использовать CSS media-query в логике. Хук <code class="inline">useMobile</code> подписывается на событие <code class="inline">resize</code> окна, обновляет состояние и возвращает <code class="inline">isMobile: boolean</code>. Компонент перерисовывается автоматически при смене ширины.
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Хук <code class="inline">useMobile</code> — добавить в <code class="inline">App.tsx</code></h4>
+      <p>Хук встроен прямо в файл App.tsx (не выносим в отдельный файл — используется только в Header).</p>
+      <div class="file-header">📄 <span>client/src/App.tsx</span></div>
+<pre><code><span class="cmt">// Лаб 15: хук для отслеживания мобильного экрана</span>
+<span class="kw">function</span> <span class="fn">useMobile</span>(breakpoint = <span class="num">768</span>) {
+  <span class="kw">const</span> [isMobile, setIsMobile] = <span class="fn">useState</span>(window.innerWidth &lt; breakpoint)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">const</span> handler = () => <span class="fn">setIsMobile</span>(window.innerWidth &lt; breakpoint)
+    window.<span class="fn">addEventListener</span>(<span class="str">'resize'</span>, handler)
+    <span class="kw">return</span> () => window.<span class="fn">removeEventListener</span>(<span class="str">'resize'</span>, handler) <span class="cmt">// cleanup</span>
+  }, [breakpoint])
+
+  <span class="kw">return</span> isMobile
+}</code></pre>
+      <div class="tip">
+        <strong>Cleanup важен:</strong> без <code class="inline">removeEventListener</code> при размонтировании компонента обработчик останется в памяти и продолжит вызываться — утечка памяти.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Массив NAV_LINKS — вынести за пределы компонента</h4>
+      <p>Создаём одну константу со всеми ссылками — используем и в десктоп-nav, и в drawer, избегая дублирования.</p>
+<pre><code><span class="kw">const</span> NAV_LINKS = [
+  { to: <span class="str">'/'</span>,          label: <span class="str">'🏠 Товары'</span>   },
+  { to: <span class="str">'/favorites'</span>, label: <span class="str">'❤️ Избранное'</span> },
+  { to: <span class="str">'/orders'</span>,    label: <span class="str">'📦 Заказы'</span>   },
+  { to: <span class="str">'/faq'</span>,       label: <span class="str">'❓ FAQ'</span>       },
+]</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ШАГ 2: БУРГЕР-МЕНЮ ═══ -->
+<section>
+  <div class="section-label">Шаг 2 — Бургер-меню в Header</div>
+  <h2>Адаптивная шапка с drawer-анимацией</h2>
+
+  <div class="theory">
+    <strong>Принцип:</strong> CSS-трансформация <code class="inline">translateX(0)</code> / <code class="inline">translateX(100%)</code> вместе с <code class="inline">transition</code> даёт плавное «выезжание» панели без сторонних библиотек. Оверлей — обычный <code class="inline">div</code> с <code class="inline">position:fixed;inset:0</code>, который поглощает клики за пределами drawer.
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Состояния и эффекты в <code class="inline">Header</code></h4>
+<pre><code><span class="kw">function</span> <span class="fn">Header</span>() {
+  <span class="kw">const</span> { user, logout } = <span class="fn">useAuth</span>()
+  <span class="kw">const</span> isMobile = <span class="fn">useMobile</span>()
+  <span class="kw">const</span> [menuOpen, setMenuOpen] = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="cmt">// Закрыть drawer при переходе на десктоп</span>
+  <span class="fn">useEffect</span>(() => { <span class="kw">if</span> (!isMobile) <span class="fn">setMenuOpen</span>(<span class="kw">false</span>) }, [isMobile])
+  <span class="cmt">// ...</span>
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Кнопка ☰ — показывать только на мобильных</h4>
+<pre><code>{isMobile &amp;&amp; (
+  &lt;<span class="tag">button</span>
+    <span class="attr">onClick</span>={() => <span class="fn">setMenuOpen</span>(v => !v)}
+    <span class="attr">aria-label</span>={menuOpen ? <span class="str">'Закрыть меню'</span> : <span class="str">'Открыть меню'</span>}
+    <span class="attr">style</span>={{
+      background: menuOpen ? <span class="str">'rgba(88,166,255,.15)'</span> : <span class="str">'transparent'</span>,
+      border: <span class="str">'1px solid #30363d'</span>, borderRadius: <span class="num">8</span>,
+      color: <span class="str">'#e6edf3'</span>, cursor: <span class="str">'pointer'</span>,
+      padding: <span class="str">'6px 10px'</span>, fontSize: <span class="num">20</span>, lineHeight: <span class="num">1</span>,
+    }}
+  &gt;
+    {menuOpen ? <span class="str">'✕'</span> : <span class="str">'☰'</span>}
+  &lt;/<span class="tag">button</span>&gt;
+)}</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Оверлей — затемнение фона при открытом drawer</h4>
+<pre><code>{isMobile &amp;&amp; (
+  &lt;<span class="tag">div</span>
+    <span class="attr">onClick</span>={() => <span class="fn">setMenuOpen</span>(<span class="kw">false</span>)}
+    <span class="attr">style</span>={{
+      position: <span class="str">'fixed'</span>, inset: <span class="num">0</span>, zIndex: <span class="num">98</span>,
+      background: <span class="str">'rgba(0,0,0,.55)'</span>, backdropFilter: <span class="str">'blur(2px)'</span>,
+      opacity: menuOpen ? <span class="num">1</span> : <span class="num">0</span>,
+      pointerEvents: menuOpen ? <span class="str">'all'</span> : <span class="str">'none'</span>, <span class="cmt">// не блокировать клики когда скрыт</span>
+      transition: <span class="str">'opacity .25s'</span>
+    }}
+  /&gt;
+)}</code></pre>
+      <div class="warn">
+        <strong>pointerEvents:</strong> без него оверлей невидимый, но всё равно перехватывает клики, блокируя всю страницу. Всегда добавляйте <code class="inline">pointerEvents: menuOpen ? 'all' : 'none'</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Drawer — боковое меню с CSS-анимацией</h4>
+<pre><code>{isMobile &amp;&amp; (
+  &lt;<span class="tag">nav</span> <span class="attr">style</span>={{
+    position: <span class="str">'fixed'</span>, top: <span class="num">56</span>, right: <span class="num">0</span>, bottom: <span class="num">0</span>, zIndex: <span class="num">99</span>,
+    width: <span class="num">260</span>, background: <span class="str">'#161b22'</span>, borderLeft: <span class="str">'1px solid #30363d'</span>,
+    padding: <span class="str">'8px 0 24px'</span>,
+    transform: menuOpen ? <span class="str">'translateX(0)'</span> : <span class="str">'translateX(100%)'</span>,
+    transition: <span class="str">'transform .25s cubic-bezier(.4,0,.2,1)'</span>,
+    display: <span class="str">'flex'</span>, flexDirection: <span class="str">'column'</span>, overflowY: <span class="str">'auto'</span>
+  }}&gt;
+    {NAV_LINKS.<span class="fn">map</span>(({ to, label }) => (
+      &lt;<span class="tag">NavLink</span> <span class="attr">key</span>={to} <span class="attr">to</span>={to} <span class="attr">end</span>={to === <span class="str">'/'</span>}
+        <span class="attr">onClick</span>={() => <span class="fn">setMenuOpen</span>(<span class="kw">false</span>)} <span class="cmt">// закрыть при переходе</span>
+        <span class="attr">style</span>={({ isActive }) => ({
+          display: <span class="str">'block'</span>, padding: <span class="str">'13px 24px'</span>,
+          color: isActive ? <span class="str">'#58a6ff'</span> : <span class="str">'#e6edf3'</span>,
+          textDecoration: <span class="str">'none'</span>, fontSize: <span class="num">15</span>, fontWeight: <span class="num">500</span>,
+          background: isActive ? <span class="str">'rgba(88,166,255,.08)'</span> : <span class="str">'transparent'</span>,
+          borderLeft: `<span class="num">3</span>px solid ${isActive ? <span class="str">'#58a6ff'</span> : <span class="str">'transparent'</span>}`
+        })}
+      &gt;{label}&lt;/<span class="tag">NavLink</span>&gt;
+    ))}
+    <span class="cmt">// ... профиль / кнопка выхода внизу</span>
+  &lt;/<span class="tag">nav</span>&gt;
+)}</code></pre>
+      <div class="tip">
+        <strong>cubic-bezier(.4,0,.2,1)</strong> — стандартный Material Design easing. Выезжание выглядит «живым»: быстрый старт и плавная остановка.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ШАГ 3: FAVORITESPAGE ═══ -->
+<section>
+  <div class="section-label">Шаг 3 — FavoritesPage.tsx</div>
+  <h2>Страница избранных товаров</h2>
+
+  <div class="theory">
+    <strong>Данные:</strong> <code class="inline">api.getFavorites()</code> возвращает массив объектов <code class="inline">{ id, productId, product: { …, images, category } }</code>. Сервер уже делает <code class="inline">include: { product: { include: { images, category } } }</code> — дополнительных запросов не нужно.
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Структура состояния и загрузка</h4>
+<pre><code><span class="kw">export function</span> <span class="fn">FavoritesPage</span>() {
+  <span class="kw">const</span> { user } = <span class="fn">useAuth</span>()
+  <span class="kw">const</span> navigate = <span class="fn">useNavigate</span>()
+  <span class="kw">const</span> { addToCart } = <span class="fn">useCart</span>()
+  <span class="kw">const</span> { toasts, show, dismiss } = <span class="fn">useToast</span>()
+
+  <span class="kw">const</span> [favs, setFavs]       = <span class="fn">useState</span>&lt;any[]&gt;([])
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>)
+  <span class="kw">const</span> [removing, setRemoving] = <span class="fn">useState</span>&lt;Set&lt;number&gt;&gt;(<span class="kw">new</span> Set())
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">if</span> (!user) { <span class="fn">navigate</span>(<span class="str">'/auth'</span>); <span class="kw">return</span> } <span class="cmt">// guard для гостей</span>
+    api.<span class="fn">getFavorites</span>()
+      .<span class="fn">then</span>(data => <span class="fn">setFavs</span>(data))
+      .<span class="fn">catch</span>(() => <span class="fn">show</span>(<span class="str">'Ошибка загрузки'</span>, <span class="str">'error'</span>))
+      .<span class="fn">finally</span>(() => <span class="fn">setLoading</span>(<span class="kw">false</span>))
+  }, [user])
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Удаление одного товара (оптимистичное UI)</h4>
+      <p>Сначала помечаем как «удаляемый» (opacity 0.5), вызываем API, убираем из массива. При ошибке показываем toast.</p>
+<pre><code><span class="kw">const</span> <span class="fn">remove</span> = <span class="kw">async</span> (productId: <span class="cls">number</span>) => {
+  <span class="fn">setRemoving</span>(prev => <span class="kw">new</span> Set([...prev, productId])) <span class="cmt">// fade</span>
+  <span class="kw">try</span> {
+    <span class="kw">await</span> api.<span class="fn">toggleFavorite</span>(productId)
+    <span class="fn">setFavs</span>(prev => prev.<span class="fn">filter</span>(f => f.productId !== productId))
+    <span class="fn">show</span>(<span class="str">'Удалено из избранного'</span>)
+  } <span class="kw">catch</span> {
+    <span class="fn">show</span>(<span class="str">'Не удалось удалить'</span>, <span class="str">'error'</span>)
+  } <span class="kw">finally</span> {
+    <span class="fn">setRemoving</span>(prev => { <span class="kw">const</span> s = <span class="kw">new</span> Set(prev); s.<span class="fn">delete</span>(productId); <span class="kw">return</span> s })
+  }
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>«Очистить всё» — последовательный перебор</h4>
+<pre><code><span class="kw">const</span> <span class="fn">clearAll</span> = <span class="kw">async</span> () => {
+  <span class="kw">if</span> (!window.<span class="fn">confirm</span>(<span class="str">'Очистить всё избранное?'</span>)) <span class="kw">return</span>
+  <span class="kw">for</span> (<span class="kw">const</span> f <span class="kw">of</span> favs) {
+    <span class="kw">await</span> api.<span class="fn">toggleFavorite</span>(f.productId).<span class="fn">catch</span>(() => {})
+  }
+  <span class="fn">setFavs</span>([])
+  <span class="fn">show</span>(<span class="str">'Избранное очищено'</span>)
+}</code></pre>
+      <div class="warn">
+        <strong>for…of vs Promise.all:</strong> здесь используем последовательный <code class="inline">for…of</code> — он гарантирует порядок и не перегружает сервер пачкой запросов. Для параллельного выполнения использовали бы <code class="inline">Promise.all(favs.map(...))</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Skeleton при загрузке — анимация shimmer</h4>
+<pre><code>{loading &amp;&amp; (
+  &lt;<span class="tag">div</span> <span class="attr">style</span>={{ display: <span class="str">'grid'</span>, gridTemplateColumns: <span class="str">'repeat(auto-fill,minmax(260px,1fr))'</span>, gap: <span class="num">20</span> }}&gt;
+    {Array.<span class="fn">from</span>({ length: <span class="num">4</span> }).<span class="fn">map</span>((_, i) => (
+      &lt;<span class="tag">div</span> <span class="attr">key</span>={i} <span class="attr">style</span>={{ height: <span class="num">380</span>, border: <span class="str">'1px solid #30363d'</span>, borderRadius: <span class="num">14</span>, overflow: <span class="str">'hidden'</span>, background: <span class="str">'#1c2230'</span> }}&gt;
+        &lt;<span class="tag">div</span> <span class="attr">style</span>={{
+          height: <span class="num">200</span>,
+          background: <span class="str">'linear-gradient(90deg,#21262d 25%,#30363d 50%,#21262d 75%)'</span>,
+          backgroundSize: <span class="str">'200% 100%'</span>,
+          animation: <span class="str">'shimmer 1.4s infinite'</span> <span class="cmt">// анимация из index.css</span>
+        }} /&gt;
+      &lt;/<span class="tag">div</span>&gt;
+    ))}
+  &lt;/<span class="tag">div</span>&gt;
+)}</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Пустой state с направляющей ссылкой</h4>
+<pre><code>{!loading &amp;&amp; favs.length === <span class="num">0</span> &amp;&amp; (
+  &lt;<span class="tag">div</span> <span class="attr">style</span>={{ textAlign: <span class="str">'center'</span>, padding: <span class="str">'80px 24px'</span> }}&gt;
+    &lt;<span class="tag">div</span> <span class="attr">style</span>={{ fontSize: <span class="num">72</span>, marginBottom: <span class="num">20</span> }}&gt;🤍&lt;/<span class="tag">div</span>&gt;
+    &lt;<span class="tag">div</span> <span class="attr">style</span>={{ fontSize: <span class="num">22</span>, fontWeight: <span class="num">700</span>, color: <span class="str">'#e6edf3'</span>, marginBottom: <span class="num">12</span> }}&gt;
+      В избранном пока ничего нет
+    &lt;/<span class="tag">div</span>&gt;
+    &lt;<span class="tag">Link</span> <span class="attr">to</span>=<span class="str">"/"</span> <span class="attr">style</span>={{ <span class="cmt">/* кнопка "Перейти к товарам" */</span> }}&gt;
+      Перейти к товарам
+    &lt;/<span class="tag">Link</span>&gt;
+  &lt;/<span class="tag">div</span>&gt;
+)}</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ШАГ 4: APP.TSX ═══ -->
+<section>
+  <div class="section-label">Шаг 4 — Обновить App.tsx</div>
+  <h2>Подключить маршрут и импорт</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Добавить импорт и маршрут</h4>
+<pre><code><span class="cmt">// Импорт</span>
+<span class="kw">import</span> { <span class="cls">FavoritesPage</span> } <span class="kw">from</span> <span class="str">'./pages/FavoritesPage'</span>
+
+<span class="cmt">// В &lt;Routes&gt;</span>
+&lt;<span class="tag">Route</span> <span class="attr">path</span>=<span class="str">"/favorites"</span> <span class="attr">element</span>={&lt;<span class="cls">FavoritesPage</span> /&gt;} /&gt;</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Результирующая структура App.tsx</h4>
+      <table>
+        <thead><tr><th>Что добавлено</th><th>Зачем</th></tr></thead>
+        <tbody>
+          <tr><td><code class="inline">import { useState, useEffect }</code></td><td>Нужны для useMobile и menuOpen</td></tr>
+          <tr><td><code class="inline">function useMobile(breakpoint=768)</code></td><td>Определяет isMobile по ширине окна</td></tr>
+          <tr><td><code class="inline">const NAV_LINKS = [...]</code></td><td>DRY-константа для обоих навигаций; ❤️ Избранное добавлен</td></tr>
+          <tr><td><code class="inline">menuOpen</code> state + drawer JSX</td><td>Боковое меню с CSS-анимацией</td></tr>
+          <tr><td><code class="inline">Route /favorites</code></td><td>Подключает страницу избранного</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ЗАДАНИЯ ═══ -->
+<section>
+  <div class="tasks">
+    <h3>🎯 Задания для самостоятельной работы</h3>
+    <ol>
+      <li>Добавить кнопку «❤️ В избранное» прямо в карточку на <strong>FavoritesPage</strong> (чтобы повторно добавить удалённый товар без перехода на главную)</li>
+      <li>Сохранять последние 10 просмотренных товаров в <code class="inline">localStorage</code> и показывать их блоком «Недавно просмотренные» на FavoritesPage</li>
+      <li>Добавить сортировку избранного: по цене (↑/↓), по дате добавления</li>
+      <li>Добавить swipe-to-close на drawer (событие <code class="inline">touchstart</code> / <code class="inline">touchend</code> + delta по X)</li>
+      <li>Сделать бургер-меню доступным: добавить <code class="inline">role="dialog"</code>, <code class="inline">aria-modal</code>, фокус-ловушку (Tab не выходит за пределы drawer)</li>
+    </ol>
+  </div>
+</section>
+
+<div class="progress-bar">
+  Лабораторная работа 15 из 15
+  <div class="progress-dots">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+    <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <a href="lab_14.html" class="btn-nav">← Лаб. №14</a>
+  <a href="index.html" class="btn-nav primary">📚 Все лабораторные</a>
+</div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn')
+  btn.addEventListener('click', () => {
+    document.body.classList.toggle('light')
+    btn.textContent = document.body.classList.contains('light') ? '🌙 Тёмная' : '☀️ Светлая'
+  })
+</script>
+</body>
+</html>

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №14 — Панель администратора</title>
+<style>
+  :root {
+    --bg:#0d1117;--surface:#161b22;--card:#1c2230;--border:#30363d;
+    --text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;
+    --green:#3fb950;--yellow:#d29922;--red:#f85149;
+    --purple:#bc8cff;--orange:#ffa657;--code-bg:#0d1117;
+    --teal:#2dd4bf;--emerald:#34d399;
+  }
+  body.light {
+    --bg:#f6f8fa;--surface:#ffffff;--card:#f0f6fc;--border:#d0d7de;
+    --text:#1f2328;--text-muted:#636c76;--accent:#0969da;
+    --green:#1a7f37;--yellow:#9a6700;--red:#d1242f;
+    --purple:#8250df;--orange:#bc4c00;--code-bg:#f6f8fa;
+    --teal:#0d9488;--emerald:#059669;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;transition:background .3s,color .3s}
+  header{background:linear-gradient(135deg,#0a1628 0%,#1a0a28 100%);padding:40px 24px 32px;text-align:center;border-bottom:1px solid var(--border);position:relative}
+  body.light header{background:linear-gradient(135deg,#dbeafe 0%,#ede9fe 100%)}
+  .lab-badge{display:inline-block;background:rgba(188,140,255,.15);border:1px solid rgba(188,140,255,.4);color:var(--purple);padding:4px 14px;border-radius:20px;font-size:13px;margin-bottom:12px;letter-spacing:.5px}
+  header h1{font-size:clamp(20px,3.5vw,32px);color:var(--text);margin-bottom:8px}
+  header p{color:var(--text-muted);font-size:15px;max-width:680px;margin:0 auto}
+  .nav-labs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .nav-labs a{padding:5px 11px;border-radius:8px;font-size:13px;text-decoration:none;background:rgba(255,255,255,.07);color:var(--text-muted);border:1px solid var(--border);transition:.2s}
+  .nav-labs a:hover,.nav-labs a.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .theme-btn{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--text);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
+  main{max-width:860px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:52px}
+  .section-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+  h2{font-size:22px;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  h3{font-size:17px;color:var(--accent);margin:24px 0 10px}
+  p{color:var(--text-muted);font-size:15px;margin-bottom:12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+  .theory{background:rgba(88,166,255,.06);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .theory strong{color:var(--accent)}
+  .tip{background:rgba(63,185,80,.07);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .warn{background:rgba(210,153,34,.07);border-left:3px solid var(--yellow);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .danger{background:rgba(248,81,73,.07);border-left:3px solid var(--red);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:20px;overflow-x:auto;font-size:13.5px;line-height:1.65;margin-bottom:16px;tab-size:2}
+  code{font-family:'Cascadia Code','Fira Code','Consolas',monospace}
+  .inline{background:var(--card);padding:2px 7px;border-radius:4px;font-family:monospace;font-size:13px}
+  .kw{color:#ff7b72}.fn{color:#d2a8ff}.str{color:#a5d6ff}
+  .cmt{color:#8b949e;font-style:italic}.num{color:#79c0ff}
+  .cls{color:#ffa657}.tag{color:#7ee787}.attr{color:#ffa657}
+  .step{display:flex;gap:16px;align-items:flex-start;margin-bottom:32px}
+  .step-num{min-width:36px;height:36px;background:var(--purple);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;margin-top:2px}
+  .step-body{flex:1}
+  .step-body h4{font-size:16px;color:var(--text);margin-bottom:8px}
+  .step-body p{color:var(--text-muted);margin-bottom:10px;font-size:14.5px}
+  .file-header{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:10px 10px 0 0;padding:10px 16px;font-size:13px;color:var(--text-muted)}
+  .file-header span{color:var(--purple);font-family:monospace}
+  .file-header+pre{border-radius:0 0 10px 10px;margin-top:0}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  th{background:var(--card);color:var(--text-muted);font-size:12px;letter-spacing:.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border)}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .tasks{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px}
+  .tasks h3{color:var(--yellow);margin-top:0}
+  .tasks ol{padding-left:20px}
+  .tasks li{padding:8px 0;color:var(--text);font-size:14.5px;border-bottom:1px solid var(--border)}
+  .tasks li:last-child{border-bottom:none}
+  .bottom-nav{display:flex;justify-content:space-between;align-items:center;margin-top:60px;padding-top:24px;border-top:1px solid var(--border)}
+  .btn-nav{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:.2s;border:2px solid var(--accent);color:var(--accent);background:transparent}
+  .btn-nav:hover{background:var(--accent);color:#fff}
+  .btn-nav.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+  .btn-nav.primary:hover{opacity:.85}
+  .progress-bar{text-align:center;color:var(--text-muted);font-size:13px}
+  .progress-dots{display:flex;gap:5px;justify-content:center;margin-top:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .dot.done{background:var(--green)}
+  .dot.active{background:var(--purple);box-shadow:0 0 6px var(--purple)}
+  /* Демо дашборда */
+  .demo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  .demo-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center}
+  .demo-num{font-size:24px;font-weight:800;margin-bottom:4px}
+  .demo-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+  .stock-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .stock-row:last-child{border-bottom:none}
+  .stock-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+  .stock-bar-wrap{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+  .stock-bar{height:100%;border-radius:4px}
+  .tab-bar{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:20px}
+  .tab{padding:8px 16px;font-size:13px;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.active{color:var(--purple);border-color:var(--purple);font-weight:700}
+  .role-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .role-admin{background:rgba(248,81,73,.15);color:var(--red);border:1px solid rgba(248,81,73,.3)}
+  .role-user{background:rgba(139,148,158,.15);color:var(--text-muted);border:1px solid rgba(139,148,158,.3)}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">⚙️ Лаб. работа №14</div>
+  <h1>Панель администратора</h1>
+  <p>Роль <code class="inline">isAdmin</code>, защищённые API-маршруты, дашборд склада, CRUD товаров, управление заказами</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">01</a><a href="lab_02.html">02</a><a href="lab_03.html">03</a>
+    <a href="lab_04.html">04</a><a href="lab_05.html">05</a><a href="lab_06.html">06</a>
+    <a href="lab_07.html">07</a><a href="lab_08.html">08</a><a href="lab_09.html">09</a>
+    <a href="lab_10.html">10</a><a href="lab_11.html">11</a><a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a><a href="lab_14.html" class="active">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ═══ ЦЕЛЬ ═══ -->
+<section>
+  <div class="section-label">Цель работы</div>
+  <h2>Что реализуем</h2>
+
+  <div class="theory">
+    <strong>Задача:</strong> добавить к магазину полноценную панель администратора. Только пользователь с флагом <code class="inline">isAdmin = true</code> получит доступ к дашборду с анализом склада, CRUD-управлению товарами, списку заказов со сменой статуса и управлению пользователями.
+  </div>
+
+  <table>
+    <thead><tr><th>Вкладка</th><th>Что делает</th></tr></thead>
+    <tbody>
+      <tr><td>📊 Дашборд</td><td>KPI-карточки (товары/заказы/пользователи/выручка), прогресс-бар склада (Нет/Мало/В наличии), топ продаж, разбивка по категориям, последние заказы</td></tr>
+      <tr><td>📦 Товары</td><td>Таблица с поиском и фильтром по остатку, inline-редактирование stock (клик на бейдж), модальное создание и редактирование, удаление</td></tr>
+      <tr><td>🛒 Заказы</td><td>Список заказов с фильтром по статусу, смена статуса select-ом прямо в строке</td></tr>
+      <tr><td>👥 Пользователи</td><td>Список всех пользователей, кнопка «Сделать admin» / «Снять»</td></tr>
+      <tr><td>🗂 Категории</td><td>CRUD категорий: список с числом товаров, создание (name + slug), редактирование, удаление</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Демо дашборда -->
+  <div class="card" style="margin-top:24px">
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Превью — Дашборд</p>
+    <div class="demo-grid">
+      <div class="demo-card"><div class="demo-num" style="color:var(--accent)">70</div><div class="demo-lbl">Товаров</div></div>
+      <div class="demo-card"><div class="demo-num" style="color:var(--purple)">1</div><div class="demo-lbl">Заказов</div></div>
+      <div class="demo-card"><div class="demo-num" style="color:var(--green)">3</div><div class="demo-lbl">Польз.</div></div>
+      <div class="demo-card"><div class="demo-num" style="color:var(--yellow)">734 940 ₽</div><div class="demo-lbl">Выручка</div></div>
+    </div>
+    <div class="card" style="margin:12px 0 0">
+      <p style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">📦 Состояние склада</p>
+      <div class="stock-row">
+        <div class="stock-dot" style="background:#f85149"></div>
+        <span style="font-size:13px;min-width:120px;color:var(--text-muted)">Нет в наличии</span>
+        <div class="stock-bar-wrap"><div class="stock-bar" style="width:3%;background:#f85149"></div></div>
+        <span style="font-size:13px;font-weight:700;color:#f85149;min-width:40px;text-align:right">2</span>
+      </div>
+      <div class="stock-row">
+        <div class="stock-dot" style="background:#d29922"></div>
+        <span style="font-size:13px;min-width:120px;color:var(--text-muted)">Мало (≤5 шт.)</span>
+        <div class="stock-bar-wrap"><div class="stock-bar" style="width:16%;background:#d29922"></div></div>
+        <span style="font-size:13px;font-weight:700;color:#d29922;min-width:40px;text-align:right">11</span>
+      </div>
+      <div class="stock-row">
+        <div class="stock-dot" style="background:#3fb950"></div>
+        <span style="font-size:13px;min-width:120px;color:var(--text-muted)">В наличии</span>
+        <div class="stock-bar-wrap"><div class="stock-bar" style="width:81%;background:#3fb950"></div></div>
+        <span style="font-size:13px;font-weight:700;color:#3fb950;min-width:40px;text-align:right">57</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ШАГ 1: СХЕМА ═══ -->
+<section>
+  <div class="section-label">Шаг 1 — Схема БД</div>
+  <h2>Добавить поле <code class="inline">isAdmin</code> в модель User</h2>
+
+  <div class="theory">
+    <strong>Зачем:</strong> роль «администратор» хранится в БД — так её нельзя подделать на стороне клиента. Поле <code class="inline">isAdmin Boolean @default(false)</code> создаёт колонку с дефолтом false — все существующие пользователи останутся обычными.
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Обновить <code class="inline">server/prisma/schema.prisma</code></h4>
+      <div class="file-header">📄 <span>server/prisma/schema.prisma</span> — модель User</div>
+      <pre><code><span class="kw">model</span> <span class="cls">User</span> {
+  id           <span class="cls">Int</span>     <span class="attr">@id @default(autoincrement())</span>
+  email        <span class="cls">String</span>  <span class="attr">@unique</span>
+  passwordHash <span class="cls">String</span>
+  name         <span class="cls">String</span>?
+  avatarUrl    <span class="cls">String</span>?
+<span class="tag">  isAdmin      Boolean @default(false)  ← добавить</span>
+
+  cart          <span class="cls">CartItem</span>[]
+  orders        <span class="cls">Order</span>[]
+  favorites     <span class="cls">Favorite</span>[]
+  notifications <span class="cls">Notification</span>[]
+  settings      <span class="cls">UserSettings</span>?
+  addresses     <span class="cls">Address</span>[]
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Применить миграцию</h4>
+      <pre><code><span class="cmt"># Остановить сервер если запущен</span>
+Get-Process node | Stop-Process -Force
+
+<span class="kw">cd</span> server
+npx prisma migrate dev <span class="str">--name add-admin-role</span>
+<span class="cmt"># → Applied 1 migration: 20260503_add_admin_role</span></code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Создать admin-пользователя в seed</h4>
+      <p>В <code class="inline">server/prisma/seed.ts</code> после блока тестового пользователя:</p>
+      <div class="file-header">📄 <span>server/prisma/seed.ts</span></div>
+      <pre><code><span class="cmt">// Администратор</span>
+<span class="kw">const</span> adminHash = <span class="kw">await</span> bcrypt.hash(<span class="str">'admin123'</span>, <span class="num">10</span>)
+<span class="kw">await</span> prisma.user.<span class="fn">upsert</span>({
+  where: { email: <span class="str">'admin@shop.com'</span> },
+  update: { isAdmin: <span class="kw">true</span> },
+  create: {
+    email: <span class="str">'admin@shop.com'</span>,
+    passwordHash: adminHash,
+    name: <span class="str">'Администратор'</span>,
+    isAdmin: <span class="kw">true</span>,
+    settings: { create: { theme: <span class="str">'dark'</span> } }
+  }
+})</code></pre>
+      <pre><code><span class="kw">npm</span> run seed
+<span class="cmt"># → Admin: admin@shop.com / admin123</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ШАГ 2: MIDDLEWARE ═══ -->
+<section>
+  <div class="section-label">Шаг 2 — Middleware</div>
+  <h2>Добавить <code class="inline">requireAdmin</code> в <code class="inline">auth.ts</code></h2>
+
+  <div class="theory">
+    <strong>Зачем два middleware:</strong> <code class="inline">requireAuth</code> проверяет только наличие токена (пользователь авторизован). <code class="inline">requireAdmin</code> дополнительно проверяет поле <code class="inline">isAdmin</code> из БД — нельзя стать администратором просто изменив payload токена.
+  </div>
+
+  <div class="file-header">📄 <span>server/src/middleware/auth.ts</span> — добавить после requireAuth</div>
+  <pre><code><span class="kw">export const</span> <span class="fn">requireAdmin</span>: RequestHandler = <span class="kw">async</span> (req, res, next) => {
+  <span class="cmt">// requireAuth уже проверил токен и положил userId в req</span>
+  <span class="kw">const</span> user = <span class="kw">await</span> prisma.user.<span class="fn">findUnique</span>({
+    where: { id: (req <span class="kw">as any</span>).userId }
+  })
+  <span class="kw">if</span> (!user?.isAdmin) {
+    res.<span class="fn">status</span>(<span class="num">403</span>).<span class="fn">json</span>({ error: <span class="str">'Нет прав администратора'</span> })
+    <span class="kw">return</span>
+  }
+  next()
+}</code></pre>
+
+  <div class="warn">
+    <strong>⚠️ Порядок middleware важен:</strong> на admin-маршрутах применяем <code class="inline">requireAuth</code> первым, затем <code class="inline">requireAdmin</code>. Если поменять местами — <code class="inline">requireAdmin</code> не найдёт <code class="inline">userId</code> в req.
+  </div>
+</section>
+
+<!-- ═══ ШАГ 3: РОУТ ═══ -->
+<section>
+  <div class="section-label">Шаг 3 — Backend роут</div>
+  <h2>Создать <code class="inline">server/src/routes/admin.ts</code></h2>
+
+  <p>Файл содержит все эндпоинты для панели администратора, каждый защищён двойным middleware.</p>
+
+  <h3>Защита маршрутов</h3>
+  <div class="file-header">📄 <span>server/src/routes/admin.ts</span> — начало файла</div>
+  <pre><code><span class="kw">import</span> { Router } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { requireAuth, requireAdmin } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+<span class="kw">import</span> prisma <span class="kw">from</span> <span class="str">'../prisma'</span>
+
+<span class="kw">const</span> router = <span class="fn">Router</span>()
+
+<span class="cmt">// Все маршруты требуют авторизацию + роль admin</span>
+router.<span class="fn">use</span>(requireAuth, requireAdmin)</code></pre>
+
+  <h3>Эндпоинты</h3>
+  <table>
+    <thead><tr><th>Метод</th><th>URL</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/admin/stats</code></td><td>KPI + stockDistrib + topProducts + categoryStats + recentOrders</td></tr>
+      <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/admin/products</code></td><td>Товары с пагинацией, поиском, фильтром <code class="inline">?stock=out|low|ok</code></td></tr>
+      <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/admin/products</code></td><td>Создать товар</td></tr>
+      <tr><td><code class="inline">PATCH</code></td><td><code class="inline">/api/admin/products/:id</code></td><td>Обновить поля товара</td></tr>
+      <tr><td><code class="inline">DELETE</code></td><td><code class="inline">/api/admin/products/:id</code></td><td>Удалить товар + его изображения</td></tr>
+      <tr><td><code class="inline">PATCH</code></td><td><code class="inline">/api/admin/products/:id/stock</code></td><td>Быстро изменить только остаток</td></tr>
+      <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/admin/orders</code></td><td>Заказы с пагинацией и фильтром по статусу</td></tr>
+      <tr><td><code class="inline">PATCH</code></td><td><code class="inline">/api/admin/orders/:id/status</code></td><td>Изменить статус заказа</td></tr>
+      <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/admin/users</code></td><td>Список пользователей с кол-вом заказов</td></tr>
+      <tr><td><code class="inline">PATCH</code></td><td><code class="inline">/api/admin/users/:id/admin</code></td><td>Выдать / снять роль admin</td></tr>
+      <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/admin/categories</code></td><td>Список категорий с количеством товаров</td></tr>
+      <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/admin/categories</code></td><td>Создать категорию (обяз: name, slug; опц: parentId)</td></tr>
+      <tr><td><code class="inline">PATCH</code></td><td><code class="inline">/api/admin/categories/:id</code></td><td>Обновить поля категории</td></tr>
+      <tr><td><code class="inline">DELETE</code></td><td><code class="inline">/api/admin/categories/:id</code></td><td>Удалить категорию</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Пример — эндпоинт статистики</h3>
+  <div class="file-header">📄 <span>server/src/routes/admin.ts</span> — GET /stats</div>
+  <pre><code>router.<span class="fn">get</span>(<span class="str">'/stats'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> [totalProducts, totalOrders, totalUsers, revenueAgg] =
+    <span class="kw">await</span> Promise.<span class="fn">all</span>([
+      prisma.product.<span class="fn">count</span>(),
+      prisma.order.<span class="fn">count</span>(),
+      prisma.user.<span class="fn">count</span>(),
+      prisma.order.<span class="fn">aggregate</span>({ _sum: { totalAmount: <span class="kw">true</span> } }),
+    ])
+
+  <span class="cmt">// Распределение по складу</span>
+  <span class="kw">const</span> out = <span class="kw">await</span> prisma.product.<span class="fn">count</span>({ where: { stock: <span class="num">0</span> } })
+  <span class="kw">const</span> low = <span class="kw">await</span> prisma.product.<span class="fn">count</span>({
+    where: { stock: { gt: <span class="num">0</span>, lte: <span class="num">5</span> } }
+  })
+  <span class="kw">const</span> ok  = <span class="kw">await</span> prisma.product.<span class="fn">count</span>({
+    where: { stock: { gt: <span class="num">5</span> } }
+  })
+
+  res.<span class="fn">json</span>({
+    totalProducts, totalOrders, totalUsers,
+    revenue: revenueAgg._sum.totalAmount ?? <span class="num">0</span>,
+    stockDistrib: { out, low, ok },
+    <span class="cmt">// ... topProducts, categoryStats, recentOrders</span>
+  })
+})</code></pre>
+
+  <div class="tip">
+    <strong>💡 Совет:</strong> используйте <code class="inline">Promise.all()</code> для параллельных независимых запросов к БД — это значительно быстрее, чем последовательные <code class="inline">await</code>.
+  </div>
+
+  <h3>Пример — фильтр по остатку</h3>
+  <div class="file-header">📄 <span>server/src/routes/admin.ts</span> — GET /products</div>
+  <pre><code>router.<span class="fn">get</span>(<span class="str">'/products'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { page = <span class="num">1</span>, limit = <span class="num">20</span>, search, stock } = req.query
+
+  <span class="cmt">// Формируем фильтр по остатку</span>
+  <span class="kw">let</span> stockFilter: <span class="cls">any</span> = {}
+  <span class="kw">if</span> (stock === <span class="str">'out'</span>) stockFilter = { stock: <span class="num">0</span> }
+  <span class="kw">if</span> (stock === <span class="str">'low'</span>) stockFilter = { stock: { gt: <span class="num">0</span>, lte: <span class="num">5</span> } }
+  <span class="kw">if</span> (stock === <span class="str">'ok'</span>)  stockFilter = { stock: { gt: <span class="num">5</span> } }
+
+  <span class="kw">const</span> where = {
+    ...stockFilter,
+    ...(search ? { name: { contains: search <span class="kw">as</span> <span class="cls">string</span>, mode: <span class="str">'insensitive'</span> } } : {})
+  }
+
+  <span class="kw">const</span> [products, total] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+    prisma.product.<span class="fn">findMany</span>({
+      where,
+      include: { images: <span class="kw">true</span>, category: { select: { name: <span class="kw">true</span> } } },
+      skip: (+page - <span class="num">1</span>) * +limit,
+      take: +limit,
+      orderBy: { id: <span class="str">'desc'</span> }
+    }),
+    prisma.product.<span class="fn">count</span>({ where })
+  ])
+
+  res.<span class="fn">json</span>({ products, total, page: +page, totalPages: <span class="cls">Math</span>.<span class="fn">ceil</span>(total / +limit) })
+})</code></pre>
+
+  <h3>Эндпоинты категорий</h3>
+  <div class="file-header">📄 <span>server/src/routes/admin.ts</span> — CRUD категорий</div>
+  <pre><code><span class="cmt">// ─── КАТЕГОРИИ ──────────────────────────────────────────────────────────────</span>
+
+<span class="cmt">// GET /api/admin/categories</span>
+router.<span class="fn">get</span>(<span class="str">'/categories'</span>, requireAuth, requireAdmin, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> categories = <span class="kw">await</span> prisma.category.<span class="fn">findMany</span>({
+    orderBy: { id: <span class="str">'asc'</span> },
+    include: { _count: { select: { products: <span class="kw">true</span> } } }
+  })
+  res.<span class="fn">json</span>(categories)
+})
+
+<span class="cmt">// POST /api/admin/categories</span>
+router.<span class="fn">post</span>(<span class="str">'/categories'</span>, requireAuth, requireAdmin, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> { name, slug, parentId } = req.body
+    <span class="kw">if</span> (!name || !slug) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'name и slug обязательны'</span> })
+    <span class="kw">const</span> category = <span class="kw">await</span> prisma.category.<span class="fn">create</span>({
+      data: { name: <span class="cls">String</span>(name), slug: <span class="cls">String</span>(slug),
+              parentId: parentId ? <span class="fn">parseInt</span>(parentId) : <span class="kw">null</span> }
+    })
+    res.<span class="fn">json</span>(category)
+  } <span class="kw">catch</span> (e: <span class="kw">any</span>) { res.<span class="fn">status</span>(<span class="num">500</span>).<span class="fn">json</span>({ error: e.message }) }
+})
+
+<span class="cmt">// PATCH /api/admin/categories/:id</span>
+router.<span class="fn">patch</span>(<span class="str">'/categories/:id'</span>, requireAuth, requireAdmin, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> id = <span class="fn">parseInt</span>(req.params.id)
+    <span class="kw">const</span> { name, slug, parentId } = req.body
+    <span class="kw">const</span> data: <span class="kw">any</span> = {}
+    <span class="kw">if</span> (name !== <span class="kw">undefined</span>) data.name = <span class="cls">String</span>(name)
+    <span class="kw">if</span> (slug !== <span class="kw">undefined</span>) data.slug = <span class="cls">String</span>(slug)
+    <span class="kw">if</span> (parentId !== <span class="kw">undefined</span>) data.parentId = parentId ? <span class="fn">parseInt</span>(parentId) : <span class="kw">null</span>
+    <span class="kw">const</span> category = <span class="kw">await</span> prisma.category.<span class="fn">update</span>({ where: { id }, data })
+    res.<span class="fn">json</span>(category)
+  } <span class="kw">catch</span> (e: <span class="kw">any</span>) { res.<span class="fn">status</span>(<span class="num">500</span>).<span class="fn">json</span>({ error: e.message }) }
+})
+
+<span class="cmt">// DELETE /api/admin/categories/:id</span>
+router.<span class="fn">delete</span>(<span class="str">'/categories/:id'</span>, requireAuth, requireAdmin, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> id = <span class="fn">parseInt</span>(req.params.id)
+    <span class="kw">await</span> prisma.category.<span class="fn">delete</span>({ where: { id } })
+    res.<span class="fn">json</span>({ ok: <span class="kw">true</span> })
+  } <span class="kw">catch</span> (e: <span class="kw">any</span>) { res.<span class="fn">status</span>(<span class="num">500</span>).<span class="fn">json</span>({ error: e.message }) }
+})</code></pre>
+
+  <div class="warn">
+    <strong>⚠️ Slug уникален:</strong> поле <code class="inline">slug</code> имеет ограничение <code class="inline">@unique</code> в схеме Prisma — при создании двух категорий с одинаковым slug сервер вернёт <code class="inline">500</code> с сообщением об ошибке. Генерируйте уникальные slug-и.
+  </div>
+
+  <h3>Зарегистрировать роут</h3>
+  <div class="file-header">📄 <span>server/src/index.ts</span></div>
+  <pre><code><span class="kw">import</span> adminRouter <span class="kw">from</span> <span class="str">'./routes/admin'</span>
+<span class="cmt">// ...</span>
+app.<span class="fn">use</span>(<span class="str">'/api/admin'</span>, adminRouter)</code></pre>
+</section>
+
+<!-- ═══ ШАГ 4: API-КЛИЕНТ ═══ -->
+<section>
+  <div class="section-label">Шаг 4 — Frontend API-клиент</div>
+  <h2>Добавить admin-методы в <code class="inline">api.ts</code></h2>
+
+  <div class="file-header">📄 <span>client/src/services/api.ts</span> — добавить в конец объекта api</div>
+  <pre><code><span class="cmt">// Admin</span>
+adminStats: () => <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">'/admin/stats'</span>),
+
+adminGetProducts: (params?: Record&lt;<span class="cls">string</span>, <span class="cls">string</span> | <span class="cls">number</span>&gt;) => {
+  <span class="kw">const</span> qs = params ? <span class="str">'?'</span> + <span class="kw">new</span> <span class="fn">URLSearchParams</span>(params <span class="kw">as any</span>).<span class="fn">toString</span>() : <span class="str">''</span>
+  <span class="kw">return</span> <span class="fn">request</span>&lt;{ products: <span class="cls">any</span>[]; total: <span class="cls">number</span>; totalPages: <span class="cls">number</span> }&gt;(
+    <span class="str">'/admin/products'</span> + qs
+  )
+},
+
+adminCreateProduct: (data: <span class="cls">any</span>) =>
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">'/admin/products'</span>, { method: <span class="str">'POST'</span>, body: JSON.<span class="fn">stringify</span>(data) }),
+
+adminUpdateProduct: (id: <span class="cls">number</span>, data: <span class="cls">any</span>) =>
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">`/admin/products/${id}`</span>, { method: <span class="str">'PATCH'</span>, body: JSON.<span class="fn">stringify</span>(data) }),
+
+adminDeleteProduct: (id: <span class="cls">number</span>) =>
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">`/admin/products/${id}`</span>, { method: <span class="str">'DELETE'</span> }),
+
+adminSetStock: (id: <span class="cls">number</span>, stock: <span class="cls">number</span>) =>
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">`/admin/products/${id}/stock`</span>, {
+    method: <span class="str">'PATCH'</span>, body: JSON.<span class="fn">stringify</span>({ stock })
+  }),
+
+adminGetOrders: (params?: Record&lt;<span class="cls">string</span>, <span class="cls">string</span> | <span class="cls">number</span>&gt;) => {
+  <span class="kw">const</span> qs = params ? <span class="str">'?'</span> + <span class="kw">new</span> <span class="fn">URLSearchParams</span>(params <span class="kw">as any</span>).<span class="fn">toString</span>() : <span class="str">''</span>
+  <span class="kw">return</span> <span class="fn">request</span>&lt;{ orders: <span class="cls">any</span>[]; total: <span class="cls">number</span>; totalPages: <span class="cls">number</span> }&gt;(
+    <span class="str">'/admin/orders'</span> + qs
+  )
+},
+
+adminSetOrderStatus: (id: <span class="cls">number</span>, status: <span class="cls">string</span>) =>
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">`/admin/orders/${id}/status`</span>, {
+    method: <span class="str">'PATCH'</span>, body: JSON.<span class="fn">stringify</span>({ status })
+  }),
+
+adminGetUsers: () => <span class="fn">request</span>&lt;<span class="cls">any</span>[]&gt;(<span class="str">'/admin/users'</span>),
+
+adminSetAdmin: (id: <span class="cls">number</span>, isAdmin: <span class="cls">boolean</span>) =>
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">`/admin/users/${id}/admin`</span>, {
+    method: <span class="str">'PATCH'</span>, body: JSON.<span class="fn">stringify</span>({ isAdmin })
+  }),
+
+<span class="cmt">// Категории</span>
+adminGetCategories: () =&gt; <span class="fn">request</span>&lt;<span class="cls">any</span>[]&gt;(<span class="str">'/admin/categories'</span>),
+
+adminCreateCategory: (data: { name: <span class="cls">string</span>; slug: <span class="cls">string</span>; parentId?: <span class="cls">number</span> | <span class="kw">null</span> }) =&gt;
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">'/admin/categories'</span>, { method: <span class="str">'POST'</span>, body: JSON.<span class="fn">stringify</span>(data) }),
+
+adminUpdateCategory: (id: <span class="cls">number</span>, data: <span class="cls">any</span>) =&gt;
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">`/admin/categories/${id}`</span>, { method: <span class="str">'PATCH'</span>, body: JSON.<span class="fn">stringify</span>(data) }),
+
+adminDeleteCategory: (id: <span class="cls">number</span>) =&gt;
+  <span class="fn">request</span>&lt;<span class="cls">any</span>&gt;(<span class="str">`/admin/categories/${id}`</span>, { method: <span class="str">'DELETE'</span> }),</code></pre>
+</section>
+
+<!-- ═══ ШАГ 5: AUTH CONTEXT ═══ -->
+<section>
+  <div class="section-label">Шаг 5 — AuthContext</div>
+  <h2>Добавить <code class="inline">isAdmin</code> в тип User</h2>
+
+  <div class="theory">
+    <strong>Зачем:</strong> TypeScript должен знать о поле <code class="inline">isAdmin</code>, иначе <code class="inline">user?.isAdmin</code> даст ошибку компиляции. Поле опциональное — старые ответы API без него не сломают логику.
+  </div>
+
+  <div class="file-header">📄 <span>client/src/context/AuthContext.tsx</span></div>
+  <pre><code><span class="kw">interface</span> <span class="cls">User</span> {
+  id: <span class="cls">number</span>
+  email: <span class="cls">string</span>
+  name?: <span class="cls">string</span> | <span class="kw">null</span>
+  avatarUrl?: <span class="cls">string</span> | <span class="kw">null</span>
+<span class="tag">  isAdmin?: boolean        ← добавить</span>
+  settings?: { theme: <span class="cls">string</span> }
+}</code></pre>
+</section>
+
+<!-- ═══ ШАГ 6: ADMINPAGE ═══ -->
+<section>
+  <div class="section-label">Шаг 6 — AdminPage.tsx</div>
+  <h2>Создать страницу панели администратора</h2>
+
+  <p>Файл <code class="inline">client/src/pages/AdminPage.tsx</code> — 4 вкладки, полностью на inline-стилях без CSS-файлов.</p>
+
+  <h3>Структура компонента</h3>
+  <div class="file-header">📄 <span>client/src/pages/AdminPage.tsx</span></div>
+  <pre><code><span class="cmt">// Вкладки</span>
+<span class="kw">type</span> <span class="cls">Tab</span> = <span class="str">'dashboard'</span> | <span class="str">'products'</span> | <span class="str">'orders'</span> | <span class="str">'users'</span>
+
+<span class="kw">export function</span> <span class="fn">AdminPage</span>() {
+  <span class="kw">const</span> { user } = <span class="fn">useAuth</span>()
+  <span class="kw">const</span> navigate = <span class="fn">useNavigate</span>()
+  <span class="kw">const</span> [tab, setTab] = <span class="fn">useState</span>&lt;<span class="cls">Tab</span>&gt;(<span class="str">'dashboard'</span>)
+
+  <span class="cmt">// Редирект если не admin</span>
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">if</span> (user !== <span class="kw">null</span> && !user?.isAdmin) <span class="fn">navigate</span>(<span class="str">'/'</span>)
+  }, [user, navigate])
+
+  <span class="kw">return</span> (
+    &lt;div&gt;
+      <span class="cmt">{/* Вкладки */}</span>
+      {tab === <span class="str">'dashboard'</span> && &lt;<span class="cls">Dashboard</span> /&gt;}
+      {tab === <span class="str">'products'</span>  && &lt;<span class="cls">Products</span> /&gt;}
+      {tab === <span class="str">'orders'</span>    && &lt;<span class="cls">Orders</span> /&gt;}
+      {tab === <span class="str">'users'</span>     && &lt;<span class="cls">Users</span> /&gt;}
+    &lt;/div&gt;
+  )
+}</code></pre>
+
+  <h3>Inline-редактирование остатка</h3>
+  <p>Клик на бейдж остатка переводит ячейку в режим редактирования — появляется input и кнопки сохранения/отмены:</p>
+  <pre><code><span class="cmt">// В компоненте Products:</span>
+<span class="kw">const</span> [editStock, setEditStock] =
+  <span class="fn">useState</span>&lt;<span class="kw">null</span> | { id: <span class="cls">number</span>; stock: <span class="cls">number</span> }&gt;(<span class="kw">null</span>)
+
+<span class="cmt">// В ячейке таблицы:</span>
+{editStock?.id === p.id ? (
+  &lt;div&gt;
+    &lt;input type=<span class="str">"number"</span>
+      value={editStock.stock}
+      onChange={e => <span class="fn">setEditStock</span>({ id: p.id, stock: +e.target.value })} /&gt;
+    &lt;button onClick={<span class="fn">handleStock</span>}&gt;✓&lt;/button&gt;
+    &lt;button onClick={() => <span class="fn">setEditStock</span>(<span class="kw">null</span>)}&gt;✕&lt;/button&gt;
+  &lt;/div&gt;
+) : (
+  &lt;span onClick={() => <span class="fn">setEditStock</span>({ id: p.id, stock: p.stock })}&gt;
+    &lt;<span class="cls">StockPill</span> stock={p.stock} /&gt;
+  &lt;/span&gt;
+)}</code></pre>
+
+  <h3>Статусы заказов — выбор прямо в таблице</h3>
+  <pre><code>&lt;select
+  value={o.status}
+  onChange={e => <span class="fn">setStatus</span>(o.id, e.target.value)}
+  style={{ background: STATUS_COLORS[o.status] + <span class="str">'22'</span>, color: STATUS_COLORS[o.status] }}
+&gt;
+  {Object.<span class="fn">entries</span>(STATUS_LABELS).<span class="fn">map</span>(([k, v]) =>
+    &lt;option key={k} value={k}&gt;{v}&lt;/option&gt;
+  )}
+&lt;/select&gt;</code></pre>
+
+  <div class="tip">
+    <strong>💡 Паттерн «тихого обновления»:</strong> после изменения статуса заказа или остатка не показываем никакого уведомления — таблица просто обновляется. Это быстрее и менее раздражающе для частых действий.
+  </div>
+</section>
+
+<!-- ═══ ШАГ 7: APP.TSX ═══ -->
+<section>
+  <div class="section-label">Шаг 7 — App.tsx</div>
+  <h2>Добавить роут и ссылку в навигацию</h2>
+
+  <div class="file-header">📄 <span>client/src/App.tsx</span></div>
+  <pre><code><span class="kw">import</span> { <span class="cls">AdminPage</span> } <span class="kw">from</span> <span class="str">'./pages/AdminPage'</span>
+
+<span class="cmt">// В компоненте Header, в nav:</span>
+{user?.isAdmin && (
+  &lt;<span class="cls">NavLink</span> to=<span class="str">"/admin"</span> style={({ isActive }) => ({
+    color: isActive ? <span class="str">'#f59e0b'</span> : <span class="str">'#8b949e'</span>,
+    <span class="cmt">// ...</span>
+  })}&gt;⚙️ Админ&lt;/<span class="cls">NavLink</span>&gt;
+)}
+
+<span class="cmt">// В Routes:</span>
+&lt;<span class="cls">Route</span> path=<span class="str">"/admin"</span> element={&lt;<span class="cls">AdminPage</span> /&gt;} /&gt;</code></pre>
+
+  <div class="warn">
+    <strong>⚠️ Клиентская защита — не единственная:</strong> условие <code class="inline">user?.isAdmin</code> скрывает ссылку в интерфейсе, но реальная защита — в <code class="inline">requireAdmin</code> на сервере. Клиентский редирект — лишь удобство, а не безопасность.
+  </div>
+
+  <div class="warn" style="border-color:#f59e0b;background:rgba(245,158,11,.08);margin-top:12px">
+    <strong>🔑 Обязательно: добавьте <code class="inline">isAdmin</code> в ответ auth-роутов!</strong>
+    <p style="margin:8px 0 4px">Без этого кнопка «⚙️ Админ» не появится, даже если пользователь — администратор в БД. Откройте <code class="inline">server/src/routes/auth.ts</code> и убедитесь что оба эндпоинта передают поле:</p>
+    <pre style="margin:6px 0 0;background:rgba(0,0,0,.25);border-radius:6px;padding:10px;font-size:13px"><code><span class="cmt">// POST /api/auth/register</span>
+res.json({ token, user: { id: user.id, email: user.email, name: user.name, <span class="tag">isAdmin: user.isAdmin</span> } })
+
+<span class="cmt">// POST /api/auth/login</span>
+res.json({ token, user: { id: user.id, email: user.email, name: user.name, <span class="tag">isAdmin: user.isAdmin</span> } })</code></pre>
+  </div>
+</section>
+
+<!-- ═══ ПРОВЕРКА ═══ -->
+<section>
+  <div class="section-label">Итог</div>
+  <h2>Проверка работы</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Войти под admin-аккаунтом</h4>
+      <p>Email: <code class="inline">admin@shop.com</code> &nbsp; Пароль: <code class="inline">admin123</code></p>
+      <p>В шапке должна появиться ссылка <strong>⚙️ Админ</strong>.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Дашборд</h4>
+      <p>Открыть <code class="inline">/admin</code> → вкладка «Дашборд»: 4 KPI-карточки, прогресс-бар склада, топ-5 продаж, последние заказы.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Управление товаром</h4>
+      <p>Вкладка «Товары» → нажать на зелёный/жёлтый/красный бейдж у товара → изменить число → ✓. Обновить страницу — значение сохранилось в БД.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Проверить защиту API</h4>
+      <pre><code><span class="cmt"># Без токена — должен вернуть 401</span>
+Invoke-RestMethod http://localhost:3001/api/admin/stats
+
+<span class="cmt"># С токеном обычного пользователя — должен вернуть 403</span>
+$tok = (Invoke-RestMethod -Uri 'http://localhost:3001/api/auth/login' `
+  -Method POST -ContentType 'application/json' `
+  -Body '{"email":"test@example.com","password":"password123"}').token
+Invoke-RestMethod http://localhost:3001/api/admin/stats `
+  -Headers @{Authorization="Bearer $tok"}
+<span class="cmt"># → {"error":"Нет прав администратора"}</span></code></pre>
+    </div>
+  </div>
+
+  <div class="tip">
+    <strong>✅ Всё работает если:</strong> обычный пользователь видит 403 на admin API, а кнопка «⚙️ Админ» в шапке появляется только после входа под <code class="inline">admin@shop.com</code>.
+  </div>
+</section>
+
+<!-- ═══ ЗАДАНИЯ ═══ -->
+<section>
+  <div class="tasks">
+    <h3>📝 Самостоятельные задания</h3>
+    <ol>
+      <li>Добавить фильтр заказов по <strong>дате</strong> (за сегодня / за неделю / за месяц)</li>
+      <li>На вкладке «Товары» добавить <strong>массовое удаление</strong> через чекбоксы (аналогично корзине из лаб. 13)</li>
+      <li>На дашборде добавить <strong>график выручки по дням</strong> — либо чистый CSS-bar-chart, либо любую библиотеку</li>
+      <li>Добавить <strong>audit-лог</strong>: таблица <code class="inline">AdminLog</code> с полями <code class="inline">adminId, action, targetId, createdAt</code> — записывать каждое действие администратора</li>
+      <li>Реализовать <strong>экспорт заказов в CSV</strong>: кнопка на вкладке «Заказы», <code class="inline">GET /api/admin/orders/export</code> возвращает CSV-файл</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ═══ НИЖНЯЯ НАВИГАЦИЯ ═══ -->
+<div class="bottom-nav">
+  <a href="lab_13.html" class="btn-nav">← Лаб. 13</a>
+  <div class="progress-bar">
+    Лабораторная 14 из 15
+    <div class="progress-dots">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div>
+      <div class="dot active"></div>
+    </div>
+  </div>
+  <a href="lab_15.html" class="btn-nav primary">Лаб. 15 →</a>
+</div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn')
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light')
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая'
+    localStorage.setItem('labTheme', t)
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light')
+  applyTheme(localStorage.getItem('labTheme') || 'dark')
+</script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React + Express + PostgreSQL — Все лабораторные</title>
+<style>
+  :root {
+    --bg:#0d1117;--surface:#161b22;--card:#1c2230;--border:#30363d;
+    --text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;
+    --green:#3fb950;--yellow:#d29922;--red:#f85149;
+    --purple:#bc8cff;--orange:#ffa657;--teal:#2dd4bf;--emerald:#34d399;--pink:#f472b6;
+  }
+  body.light {
+    --bg:#f6f8fa;--surface:#ffffff;--card:#f0f6fc;--border:#d0d7de;
+    --text:#1f2328;--text-muted:#636c76;--accent:#0969da;
+    --green:#1a7f37;--yellow:#9a6700;--red:#d1242f;
+    --purple:#8250df;--orange:#bc4c00;--teal:#0d9488;--emerald:#059669;--pink:#db2777;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background .3s,color .3s}
+
+  /* ─── Hero ─── */
+  .hero{background:linear-gradient(135deg,#071a10 0%,#0a1628 60%,#0d1117 100%);padding:60px 24px 48px;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+  body.light .hero{background:linear-gradient(135deg,#d1fae5 0%,#dbeafe 100%)}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(52,211,153,.08),transparent)}
+  .theme-btn{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--text);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s;z-index:1}
+  .hero-badge{display:inline-block;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.4);color:var(--emerald);padding:5px 18px;border-radius:20px;font-size:13px;margin-bottom:16px;letter-spacing:.5px}
+  .hero h1{font-size:clamp(24px,4vw,42px);margin-bottom:12px;line-height:1.2}
+  .hero h1 span{color:var(--emerald)}
+  .hero p{color:var(--text-muted);font-size:16px;max-width:600px;margin:0 auto 28px}
+  .stack-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .pill{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:500}
+  .pill-react{background:rgba(88,166,255,.15);color:var(--accent);border:1px solid rgba(88,166,255,.3)}
+  .pill-node{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3)}
+  .pill-pg{background:rgba(188,140,255,.15);color:var(--purple);border:1px solid rgba(188,140,255,.3)}
+  .pill-ts{background:rgba(45,212,191,.15);color:var(--teal);border:1px solid rgba(45,212,191,.3)}
+
+  /* ─── Stats ─── */
+  .stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;padding:28px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .stat{text-align:center}
+  .stat-num{font-size:28px;font-weight:700;color:var(--emerald)}
+  .stat-lbl{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+  /* ─── Main ─── */
+  main{max-width:960px;margin:0 auto;padding:40px 24px 80px}
+
+  /* ─── Section headers ─── */
+  .phase-header{display:flex;align-items:center;gap:12px;margin:40px 0 20px}
+  .phase-line{flex:1;height:1px;background:var(--border)}
+  .phase-badge{padding:5px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+  .phase-1 .phase-badge{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3)}
+  .phase-2 .phase-badge{background:rgba(88,166,255,.15);color:var(--accent);border:1px solid rgba(88,166,255,.3)}
+  .phase-3 .phase-badge{background:rgba(188,140,255,.15);color:var(--purple);border:1px solid rgba(188,140,255,.3)}
+  .phase-4 .phase-badge{background:rgba(45,212,191,.15);color:var(--teal);border:1px solid rgba(45,212,191,.3)}
+
+  /* ─── Lab cards ─── */
+  .labs-grid{display:flex;flex-direction:column;gap:10px}
+  .lab-card{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:12px;text-decoration:none;color:inherit;transition:border-color .2s,transform .15s,box-shadow .2s;overflow:hidden;position:relative}
+  .lab-card:hover{border-color:var(--emerald);transform:translateY(-1px);box-shadow:0 4px 20px rgba(52,211,153,.12)}
+  .lab-num{display:flex;align-items:center;justify-content:center;width:56px;align-self:stretch;font-size:18px;font-weight:800;border-right:1px solid var(--border);color:var(--text-muted);padding:18px 0}
+  .lab-card:hover .lab-num{color:var(--emerald)}
+  .lab-body{padding:16px 20px}
+  .lab-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+  .lab-topics{display:flex;gap:6px;flex-wrap:wrap}
+  .topic{padding:2px 9px;border-radius:10px;font-size:11.5px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted)}
+  .lab-meta{padding:12px 18px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:90px}
+  .lab-arrow{font-size:20px;color:var(--border);transition:.2s}
+  .lab-card:hover .lab-arrow{color:var(--emerald)}
+  .dep-badge{font-size:11px;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:8px;white-space:nowrap}
+
+  /* Цветовые акценты левой полосы */
+  .lab-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:12px 0 0 12px}
+  .accent-green::before{background:var(--green)}
+  .accent-blue::before{background:var(--accent)}
+  .accent-yellow::before{background:var(--yellow)}
+  .accent-purple::before{background:var(--purple)}
+  .accent-teal::before{background:var(--teal)}
+  .accent-orange::before{background:var(--orange)}
+  .accent-pink::before{background:var(--pink)}
+
+  /* ─── Dependency map ─── */
+  .dep-map{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:40px}
+  .dep-map h2{font-size:16px;margin-bottom:20px;color:var(--text)}
+  .dep-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;flex-wrap:wrap}
+  .dep-box{padding:4px 12px;border-radius:8px;font-weight:600;font-size:12px;white-space:nowrap}
+  .arr{color:var(--text-muted);font-size:16px}
+  .dep-note{color:var(--text-muted);font-size:12px;margin-left:4px}
+  .bg-green{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.25)}
+  .bg-blue{background:rgba(88,166,255,.15);color:var(--accent);border:1px solid rgba(88,166,255,.25)}
+  .bg-yellow{background:rgba(210,153,34,.15);color:var(--yellow);border:1px solid rgba(210,153,34,.25)}
+  .bg-purple{background:rgba(188,140,255,.15);color:var(--purple);border:1px solid rgba(188,140,255,.25)}
+  .bg-teal{background:rgba(45,212,191,.15);color:var(--teal);border:1px solid rgba(45,212,191,.25)}
+  .bg-pink{background:rgba(244,114,182,.15);color:var(--pink);border:1px solid rgba(244,114,182,.25)}
+
+  /* ─── Tech table ─── */
+  .tech-table{width:100%;border-collapse:collapse;margin-top:8px}
+  .tech-table th{background:var(--surface);color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;border-bottom:2px solid var(--border);text-align:left}
+  .tech-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:top}
+  .tech-table tr:last-child td{border-bottom:none}
+  .tech-table code{background:var(--surface);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px}
+
+  /* ─── Footer note ─── */
+  .note{background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:18px 22px;margin-top:40px;font-size:14px;color:var(--text-muted);line-height:1.7}
+  .note strong{color:var(--emerald)}
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="hero-badge">📚 15 лабораторных работ</div>
+  <h1>React + Express + <span>PostgreSQL</span><br>Интернет-магазин с нуля</h1>
+  <p>Последовательный курс: от пустой папки до полноценного e-commerce сайта</p>
+  <div class="stack-pills">
+    <span class="pill pill-react">React 18 + Vite + TypeScript</span>
+    <span class="pill pill-node">Node.js + Express 4</span>
+    <span class="pill pill-pg">PostgreSQL 16 + Prisma 5</span>
+    <span class="pill pill-ts">JWT + bcrypt</span>
+  </div>
+</div>
+
+<!-- ═══ STATS ═══ -->
+<div class="stats">
+  <div class="stat"><div class="stat-num">15</div><div class="stat-lbl">Лабораторных</div></div>
+  <div class="stat"><div class="stat-num">81</div><div class="stat-lbl">React-фич</div></div>
+  <div class="stat"><div class="stat-num">44</div><div class="stat-lbl">Фич в README</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-lbl">Уровня сложности</div></div>
+</div>
+
+<main>
+
+<!-- ═══ ЗАВИСИМОСТИ ═══ -->
+<div class="dep-map">
+  <h2>🗺 Карта зависимостей между лабами</h2>
+  <div class="dep-row">
+    <span class="dep-box bg-green">01–02</span>
+    <span class="arr">→</span>
+    <span class="dep-note">Основа: стек, сервер, БД — нужны для всего</span>
+  </div>
+  <div class="dep-row">
+    <span class="dep-box bg-green">02</span>
+    <span class="arr">→</span>
+    <span class="dep-box bg-blue">03–04–05</span>
+    <span class="arr">→</span>
+    <span class="dep-note">Без API нет React-фронтенда; без авторизации нет корзины</span>
+  </div>
+  <div class="dep-row">
+    <span class="dep-box bg-blue">04 + 05</span>
+    <span class="arr">→</span>
+    <span class="dep-box bg-yellow">06</span>
+    <span class="arr">→</span>
+    <span class="dep-note">Промокоды применяются к корзине авторизованного пользователя</span>
+  </div>
+  <div class="dep-row">
+    <span class="dep-box bg-blue">04 + 05</span>
+    <span class="arr">→</span>
+    <span class="dep-box bg-yellow">09</span>
+    <span class="arr">→</span>
+    <span class="dep-note">Заказ = авторизованный пользователь + корзина + транзакция</span>
+  </div>
+  <div class="dep-row">
+    <span class="dep-box bg-yellow">06–09</span>
+    <span class="arr">→</span>
+    <span class="dep-box bg-purple">10–11–12</span>
+    <span class="arr">→</span>
+    <span class="dep-note">UX-слой поверх рабочего ядра</span>
+  </div>
+  <div class="dep-row">
+    <span class="dep-box bg-teal">13</span>
+    <span class="arr">→</span>
+    <span class="dep-note">Категории, адрес и остаток — расширение схемы из лаб. 02</span>
+  </div>
+  <div class="dep-row">
+    <span class="dep-box bg-purple">05 + 13</span>
+    <span class="arr">→</span>
+    <span class="dep-box bg-purple">14</span>
+    <span class="arr">→</span>
+    <span class="dep-note">isAdmin расширяет JWT-авторизацию; управление складом требует поля stock из лаб. 13</span>
+  </div>
+  <div class="dep-row">
+    <span class="dep-box bg-pink">10 + 14</span>
+    <span class="arr">→</span>
+    <span class="dep-box bg-pink">15</span>
+    <span class="arr">→</span>
+    <span class="dep-note">FavoritesPage использует toggleFavorite из лаб.10; useMobile — новый паттерн для resize</span>
+  </div>
+</div>
+
+<!-- ═══ ФАЗА 1 ═══ -->
+<div class="phase-header phase-1">
+  <div class="phase-line"></div>
+  <div class="phase-badge">⚙️ Фаза 1 — Основа (лаб. 01–02)</div>
+  <div class="phase-line"></div>
+</div>
+<div class="labs-grid">
+
+  <a href="lab_01.html" class="lab-card accent-green">
+    <div class="lab-num">01</div>
+    <div class="lab-body">
+      <div class="lab-title">Стек и архитектура</div>
+      <div class="lab-topics">
+        <span class="topic">Node.js 22 LTS</span>
+        <span class="topic">React 18</span>
+        <span class="topic">PostgreSQL 16</span>
+        <span class="topic">Vite 5</span>
+        <span class="topic">Prisma 5</span>
+        <span class="topic">структура проекта</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">старт</span></div>
+  </a>
+
+  <a href="lab_02.html" class="lab-card accent-green">
+    <div class="lab-num">02</div>
+    <div class="lab-body">
+      <div class="lab-title">Первый сервер Express + Prisma</div>
+      <div class="lab-topics">
+        <span class="topic">REST API</span>
+        <span class="topic">Prisma schema</span>
+        <span class="topic">Product модель</span>
+        <span class="topic">GET /api/products</span>
+        <span class="topic">миграции</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 01</span></div>
+  </a>
+
+</div>
+
+<!-- ═══ ФАЗА 2 ═══ -->
+<div class="phase-header phase-2">
+  <div class="phase-line"></div>
+  <div class="phase-badge">🛒 Фаза 2 — Ядро магазина (лаб. 03–05)</div>
+  <div class="phase-line"></div>
+</div>
+<div class="labs-grid">
+
+  <a href="lab_03.html" class="lab-card accent-blue">
+    <div class="lab-num">03</div>
+    <div class="lab-body">
+      <div class="lab-title">Первый React-компонент — Каталог</div>
+      <div class="lab-topics">
+        <span class="topic">useState</span>
+        <span class="topic">useEffect</span>
+        <span class="topic">fetch</span>
+        <span class="topic">Vite proxy</span>
+        <span class="topic">ProductCard</span>
+        <span class="topic">CSS-модули</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 02</span></div>
+  </a>
+
+  <a href="lab_04.html" class="lab-card accent-blue">
+    <div class="lab-num">04</div>
+    <div class="lab-body">
+      <div class="lab-title">Корзина + useCart + React Router</div>
+      <div class="lab-topics">
+        <span class="topic">useCart хук</span>
+        <span class="topic">Context API</span>
+        <span class="topic">React Router</span>
+        <span class="topic">CartItem API</span>
+        <span class="topic">«До бесплатной»</span>
+        <span class="topic">localStorage</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 03</span></div>
+  </a>
+
+  <a href="lab_05.html" class="lab-card accent-blue">
+    <div class="lab-num">05</div>
+    <div class="lab-body">
+      <div class="lab-title">JWT-авторизация</div>
+      <div class="lab-topics">
+        <span class="topic">bcrypt</span>
+        <span class="topic">jsonwebtoken</span>
+        <span class="topic">requireAuth middleware</span>
+        <span class="topic">AuthContext</span>
+        <span class="topic">protected routes</span>
+        <span class="topic">User модель</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 02</span></div>
+  </a>
+
+</div>
+
+<!-- ═══ ФАЗА 3 ═══ -->
+<div class="phase-header phase-3">
+  <div class="phase-line"></div>
+  <div class="phase-badge">🎯 Фаза 3 — Функционал (лаб. 06–09)</div>
+  <div class="phase-line"></div>
+</div>
+<div class="labs-grid">
+
+  <a href="lab_06.html" class="lab-card accent-yellow">
+    <div class="lab-num">06</div>
+    <div class="lab-body">
+      <div class="lab-title">Промокоды + Рейтинг товаров</div>
+      <div class="lab-topics">
+        <span class="topic">PromoCode модель</span>
+        <span class="topic">скидка в %</span>
+        <span class="topic">Rating модель</span>
+        <span class="topic">1–5 звёзд</span>
+        <span class="topic">AVG агрегация</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 04–05</span></div>
+  </a>
+
+  <a href="lab_07.html" class="lab-card accent-yellow">
+    <div class="lab-num">07</div>
+    <div class="lab-body">
+      <div class="lab-title">UX-фичи: таймер, уведомления, тема</div>
+      <div class="lab-topics">
+        <span class="topic">CountdownTimer</span>
+        <span class="topic">NotificationBell</span>
+        <span class="topic">тёмная тема → PostgreSQL</span>
+        <span class="topic">UserSettings модель</span>
+        <span class="topic">polling</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 05</span></div>
+  </a>
+
+  <a href="lab_08.html" class="lab-card accent-yellow">
+    <div class="lab-num">08</div>
+    <div class="lab-body">
+      <div class="lab-title">Сборка мини-магазина — интеграция</div>
+      <div class="lab-topics">
+        <span class="topic">App.tsx (все роуты)</span>
+        <span class="topic">полная схема Prisma</span>
+        <span class="topic">запуск проекта</span>
+        <span class="topic">итог лаб. 01–08</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 01–07</span></div>
+  </a>
+
+  <a href="lab_09.html" class="lab-card accent-yellow">
+    <div class="lab-num">09</div>
+    <div class="lab-body">
+      <div class="lab-title">Заказы, поиск, фильтры, пагинация</div>
+      <div class="lab-topics">
+        <span class="topic">Order + OrderItem</span>
+        <span class="topic">POST /api/orders</span>
+        <span class="topic">поиск по name</span>
+        <span class="topic">сортировка</span>
+        <span class="topic">LIMIT + OFFSET</span>
+        <span class="topic">/product/:id</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 04–05</span></div>
+  </a>
+
+</div>
+
+<!-- ═══ ФАЗА 4 ═══ -->
+<div class="phase-header phase-4">
+  <div class="phase-line"></div>
+  <div class="phase-badge">✨ Фаза 4 — UX-слой (лаб. 10–13)</div>
+  <div class="phase-line"></div>
+</div>
+<div class="labs-grid">
+
+  <a href="lab_10.html" class="lab-card accent-teal">
+    <div class="lab-num">10</div>
+    <div class="lab-body">
+      <div class="lab-title">Бейджи, уведомления, избранное</div>
+      <div class="lab-topics">
+        <span class="topic">ProductBadge</span>
+        <span class="topic">BADGE_CONFIG</span>
+        <span class="topic">email debounce</span>
+        <span class="topic">Favorite модель</span>
+        <span class="topic">оптимистичное обновление</span>
+        <span class="topic">NotifyStock</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 05–09</span></div>
+  </a>
+
+  <a href="lab_11.html" class="lab-card accent-teal">
+    <div class="lab-num">11</div>
+    <div class="lab-body">
+      <div class="lab-title">FAQ, галерея, подписка, GDPR</div>
+      <div class="lab-topics">
+        <span class="topic">tsvector + GIN</span>
+        <span class="topic">полнотекстовый поиск</span>
+        <span class="topic">ProductGallery</span>
+        <span class="topic">Subscriber модель</span>
+        <span class="topic">WELCOME купон</span>
+        <span class="topic">CookieBanner</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 02–05</span></div>
+  </a>
+
+  <a href="lab_12.html" class="lab-card accent-teal">
+    <div class="lab-num">12</div>
+    <div class="lab-body">
+      <div class="lab-title">Пароль, мини-корзина, доставка, история, скелетон, тосты</div>
+      <div class="lab-topics">
+        <span class="topic">PasswordStrength</span>
+        <span class="topic">MiniCart dropdown</span>
+        <span class="topic">useClickOutside</span>
+        <span class="topic">DeliveryRate</span>
+        <span class="topic">OrderHistory</span>
+        <span class="topic">Skeleton shimmer</span>
+        <span class="topic">ToastContext</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 04–09</span></div>
+  </a>
+
+  <a href="lab_13.html" class="lab-card accent-orange">
+    <div class="lab-num">13</div>
+    <div class="lab-body">
+      <div class="lab-title">Категории, адрес доставки, остаток товара</div>
+      <div class="lab-topics">
+        <span class="topic">Category + parentId</span>
+        <span class="topic">useSearchParams</span>
+        <span class="topic">Breadcrumb</span>
+        <span class="topic">Address CRUD</span>
+        <span class="topic">addressSnapshot</span>
+        <span class="topic">$transaction</span>
+        <span class="topic">StockBadge</span>
+        <span class="topic">decrement</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 02–09</span></div>
+  </a>
+
+  <a href="lab_14.html" class="lab-card accent-purple">
+    <div class="lab-num">14</div>
+    <div class="lab-body">
+      <div class="lab-title">Панель администратора</div>
+      <div class="lab-topics">
+        <span class="topic">isAdmin роль</span>
+        <span class="topic">requireAdmin middleware</span>
+        <span class="topic">дашборд склада</span>
+        <span class="topic">CRUD товаров</span>
+        <span class="topic">статусы заказов</span>
+        <span class="topic">Promise.all</span>
+        <span class="topic">inline-редактирование</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 05 + 13</span></div>
+  </a>
+
+  <a href="lab_15.html" class="lab-card accent-pink">
+    <div class="lab-num">15</div>
+    <div class="lab-body">
+      <div class="lab-title">Избранное и бургер-меню</div>
+      <div class="lab-topics">
+        <span class="topic">FavoritesPage</span>
+        <span class="topic">useMobile</span>
+        <span class="topic">drawer-меню</span>
+        <span class="topic">translateX анимация</span>
+        <span class="topic">resize listener</span>
+        <span class="topic">skeleton grid</span>
+        <span class="topic">оптимистичный UI</span>
+      </div>
+    </div>
+    <div class="lab-meta"><span class="lab-arrow">→</span><span class="dep-badge">нужен лаб. 10 + 14</span></div>
+  </a>
+
+</div>
+
+<!-- ═══ ЧТО ИЗУЧИЛИ ═══ -->
+<div class="phase-header phase-1" style="margin-top:48px">
+  <div class="phase-line"></div>
+  <div class="phase-badge">🧩 Что изучили за курс</div>
+  <div class="phase-line"></div>
+</div>
+
+<table class="tech-table" style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+  <thead>
+    <tr><th>Уровень</th><th>Технология / паттерн</th><th>Где</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>🗄 Backend</td>
+      <td>REST API, CRUD, транзакции, миграции, агрегации SQL, полнотекстовый поиск, rate-limiting, seed-данные</td>
+      <td><code>лаб. 02, 06, 09, 11, 13</code></td>
+    </tr>
+    <tr>
+      <td>🔐 Безопасность</td>
+      <td>bcrypt, JWT, requireAuth middleware, IDOR-защита, httpOnly cookie, GDPR, <strong>роль isAdmin, requireAdmin</strong></td>
+      <td><code>лаб. 05, 09, 11, 12, 13, 14</code></td>
+    </tr>
+    <tr>
+      <td>⚛️ React</td>
+      <td>useState, useEffect, useContext, useRef, custom hooks, React Router (useSearchParams, useNavigate), lazy loading</td>
+      <td><code>лаб. 03–13</code></td>
+    </tr>
+    <tr>
+      <td>🎨 UX-паттерны</td>
+      <td>debounce, polling, optimistic update, skeleton loader, toast stack, countdown timer, dropdown, тёмная тема</td>
+      <td><code>лаб. 07, 10, 12</code></td>
+    </tr>
+    <tr>
+      <td>📦 Данные</td>
+      <td>Prisma relations, $transaction, $queryRaw, JSON-снимок, tsvector + GIN, пагинация</td>
+      <td><code>лаб. 02, 09, 11, 13</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>⚠️ Важно о порядке:</strong> Лабы 01–05 — жёсткая последовательность, каждая опирается на предыдущую.
+  Лабы 06–13 можно выполнять в любом порядке при условии, что лаб. 04 и 05 уже сделаны.
+  Если что-то не работает — первым делом проверяй наличие <code>requireAuth middleware</code> (лаб. 05)
+  и подключение роутов в <code>backend/src/index.ts</code>.
+</div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn')
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light')
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая'
+    localStorage.setItem('labTheme', t)
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light')
+  applyTheme(localStorage.getItem('labTheme') || 'dark')
+</script>
+</body>
+</html>

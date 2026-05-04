@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №11 — FAQ, подписка, галерея, GDPR</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+    --teal: #2dd4bf;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+    --teal: #0d9488;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0a2a2a 0%, #082020 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #d0fafa 0%, #c4f0e8 100%); }
+  .lab-badge { display: inline-block; background: rgba(45,212,191,.15); border: 1px solid rgba(45,212,191,.4); color: var(--teal); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  p { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .tip  { background: rgba(63,185,80,.07);  border-left: 3px solid var(--green);  border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(210,153,34,.07); border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .tag { color: #7ee787; } .attr { color: #ffa657; }
+  .sql { color: #a5d6ff; } .sql-kw { color: #ff7b72; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--teal); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  .file-header { display: flex; align-items: center; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--teal); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 8px 0; color: var(--text); font-size: 14.5px; border-bottom: 1px solid var(--border); }
+  .tasks li:last-child { border-bottom: none; }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+  /* Gallery demo */
+  .gallery-demo { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0; flex-wrap: wrap; }
+  .gallery-thumb { width: 56px; height: 56px; border-radius: 6px; background: var(--card); border: 2px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: .2s; }
+  .gallery-thumb.active { border-color: var(--teal); }
+  .gallery-main  { width: 160px; height: 160px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  /* GDPR demo */
+  .gdpr-banner { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 12px 0; }
+  .gdpr-banner p { margin: 0; font-size: 14px; }
+  .gdpr-banner button { padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+  .gdpr-accept { background: var(--teal); color: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">📚 Продвинутые фичи</div>
+  <h1>№11 — FAQ, галерея, подписка, GDPR</h1>
+  <p>Full-text search PostgreSQL, галерея фотографий, подписка на рассылку, баннер куки</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html" class="active">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ЧАСТЬ 1: FAQ FULLTEXT ── -->
+  <section>
+    <div class="section-label">Часть 1 — Фича #25</div>
+    <h2>🔍 FAQ — полнотекстовый поиск PostgreSQL</h2>
+
+    <div class="theory">
+      <strong>tsvector</strong> — это специальный тип данных PostgreSQL для полнотекстового поиска.
+      Текст разбивается на «лексемы» (нормализованные слова), строится GIN-индекс.
+      Поиск работает в сотни раз быстрее, чем <code class="inline">LIKE '%слово%'</code>, и понимает словоформы.
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Создать GIN-индекс в PostgreSQL</h4>
+        <p>Выполнить в psql или Prisma Studio (SQL-вкладка):</p>
+        <pre><code><span class="cmt">-- Добавить колонку для поискового вектора</span>
+<span class="sql-kw">ALTER TABLE</span> <span class="str">"FaqItem"</span> <span class="sql-kw">ADD COLUMN</span>
+  search_vector tsvector;
+
+<span class="cmt">-- Заполнить вектор для существующих строк</span>
+<span class="sql-kw">UPDATE</span> <span class="str">"FaqItem"</span>
+  <span class="sql-kw">SET</span> search_vector = to_tsvector(
+    <span class="str">'russian'</span>,
+    question || <span class="str">' '</span> || answer
+  );
+
+<span class="cmt">-- Создать быстрый GIN-индекс</span>
+<span class="sql-kw">CREATE INDEX</span> faq_search_idx
+  <span class="sql-kw">ON</span> <span class="str">"FaqItem"</span> <span class="sql-kw">USING GIN</span>(search_vector);
+
+<span class="cmt">-- Триггер: автообновлять вектор при INSERT/UPDATE</span>
+<span class="sql-kw">CREATE</span> OR <span class="sql-kw">REPLACE FUNCTION</span> faq_search_update() <span class="sql-kw">RETURNS</span> trigger <span class="sql-kw">AS</span> $$
+<span class="sql-kw">BEGIN</span>
+  NEW.search_vector := to_tsvector(<span class="str">'russian'</span>, NEW.question || <span class="str">' '</span> || NEW.answer);
+  <span class="sql-kw">RETURN</span> NEW;
+<span class="sql-kw">END</span>
+$$ LANGUAGE plpgsql;
+
+<span class="sql-kw">CREATE TRIGGER</span> faq_search_trigger
+  <span class="sql-kw">BEFORE INSERT OR UPDATE ON</span> <span class="str">"FaqItem"</span>
+  <span class="sql-kw">FOR EACH ROW EXECUTE FUNCTION</span> faq_search_update();
+</code></pre>
+        <div class="warn">
+          <strong>Prisma не управляет raw-SQL триггерами</strong> — добавь эти команды в отдельный <code class="inline">prisma/migrations/XXX/migration_custom.sql</code> или выполни вручную после <code class="inline">prisma migrate dev</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Backend — GET /api/faq/search</h4>
+        <div class="file-header"><span>backend/src/routes/faq.ts</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+
+<span class="kw">const</span> router = <span class="cls">Router</span>()
+
+router.<span class="fn">get</span>(<span class="str">'/search'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { q = <span class="str">''</span> } = req.query <span class="kw">as</span> { q: string }
+
+  <span class="kw">if</span> (!q.trim()) {
+    <span class="cmt">// Без запроса — вернуть все FAQ</span>
+    <span class="kw">const</span> all = <span class="kw">await</span> prisma.faqItem.<span class="fn">findMany</span>({
+      select: { id: <span class="kw">true</span>, question: <span class="kw">true</span>, answer: <span class="kw">true</span> }
+    })
+    <span class="kw">return</span> res.<span class="fn">json</span>(all)
+  }
+
+  <span class="cmt">// Полнотекстовый поиск с ранжированием по релевантности</span>
+  <span class="kw">const</span> results = <span class="kw">await</span> prisma.<span class="fn">$queryRaw</span>`
+    <span class="sql-kw">SELECT</span> id, question, answer,
+           ts_rank(search_vector, plainto_tsquery(<span class="str">'russian'</span>, ${q})) <span class="sql-kw">AS</span> rank
+    <span class="sql-kw">FROM</span>   <span class="str">"FaqItem"</span>
+    <span class="sql-kw">WHERE</span>  search_vector @@ plainto_tsquery(<span class="str">'russian'</span>, ${q})
+    <span class="sql-kw">ORDER BY</span> rank <span class="sql-kw">DESC</span>
+  `
+  res.<span class="fn">json</span>(results)
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+        <div class="tip">
+          <strong>Параметризованный запрос:</strong> <code class="inline">$queryRaw</code> с template literals автоматически передаёт <code class="inline">q</code> как параметр — защита от SQL-инъекций.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>React — FaqPage с live-поиском</h4>
+        <div class="file-header"><span>frontend/src/pages/FaqPage.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">FaqItem</span> { id: number; question: string; answer: string }
+
+<span class="kw">export function</span> <span class="fn">FaqPage</span>() {
+  <span class="kw">const</span> [query, setQuery] = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [items, setItems] = <span class="fn">useState</span>&lt;<span class="cls">FaqItem</span>[]&gt;([])
+  <span class="kw">const</span> [open,  setOpen]  = <span class="fn">useState</span>&lt;number | null&gt;(<span class="kw">null</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">const</span> timer = <span class="fn">setTimeout</span>(<span class="kw">async</span> () => {
+      <span class="kw">const</span> url = <span class="str">`/api/faq/search?q=${<span class="fn">encodeURIComponent</span>(query)}`</span>
+      <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(url).<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+      <span class="fn">setItems</span>(data)
+    }, <span class="num">300</span>)
+    <span class="kw">return</span> () => <span class="fn">clearTimeout</span>(timer)
+  }, [query])
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;h2&gt;</span>Часто задаваемые вопросы<span class="tag">&lt;/h2&gt;</span>
+      <span class="tag">&lt;input</span>
+        <span class="attr">value</span>={query}
+        <span class="attr">onChange</span>={e => <span class="fn">setQuery</span>(e.target.value)}
+        <span class="attr">placeholder</span>=<span class="str">"Поиск по FAQ..."</span>
+      <span class="tag">/&gt;</span>
+      {items.<span class="fn">map</span>(item => (
+        <span class="tag">&lt;div</span> <span class="attr">key</span>={item.id}<span class="tag">&gt;</span>
+          <span class="tag">&lt;div</span>
+            <span class="attr">onClick</span>={() => <span class="fn">setOpen</span>(open === item.id ? <span class="kw">null</span> : item.id)}
+            <span class="attr">style</span>={{ cursor: <span class="str">'pointer'</span>, fontWeight: <span class="num">600</span> }}
+          <span class="tag">&gt;</span>
+            {open === item.id ? <span class="str">'▼'</span> : <span class="str">'▶'</span>} {item.question}
+          <span class="tag">&lt;/div&gt;</span>
+          {open === item.id &amp;&amp; <span class="tag">&lt;p&gt;</span>{item.answer}<span class="tag">&lt;/p&gt;</span>}
+        <span class="tag">&lt;/div&gt;</span>
+      ))}
+      {!items.length &amp;&amp; query &amp;&amp; <span class="tag">&lt;p&gt;</span>Ничего не найдено<span class="tag">&lt;/p&gt;</span>}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 2: ГАЛЕРЕЯ ── -->
+  <section>
+    <div class="section-label">Часть 2 — ProductImage</div>
+    <h2>🖼 Галерея фотографий товара</h2>
+
+    <div class="theory">
+      <strong>Модель ProductImage:</strong> у одного товара может быть несколько фотографий.
+      Поле <code class="inline">order</code> задаёт порядок. Главное фото — с наименьшим <code class="inline">order</code>.
+    </div>
+
+    <p>Демо-превью (интерактивное):</p>
+    <div class="gallery-demo" id="galleryDemo">
+      <div>
+        <div class="gallery-main" id="galleryMain">📦</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="gallery-thumb active" onclick="setThumb(this,'📦')">📦</div>
+        <div class="gallery-thumb" onclick="setThumb(this,'👟')">👟</div>
+        <div class="gallery-thumb" onclick="setThumb(this,'🎨')">🎨</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Backend — GET /api/products/:id с фотографиями</h4>
+        <pre><code>router.<span class="fn">get</span>(<span class="str">'/:id'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> product = <span class="kw">await</span> prisma.product.<span class="fn">findUnique</span>({
+    where:   { id: <span class="cls">Number</span>(req.params.id) },
+    include: {
+      images:  { orderBy: { order: <span class="str">'asc'</span> } },   <span class="cmt">// по порядку</span>
+      ratings: { select: { score: <span class="kw">true</span> } }
+    }
+  })
+  <span class="kw">if</span> (!product) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ error: <span class="str">'Не найден'</span> })
+  res.<span class="fn">json</span>(product)
+})
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>React — ProductGallery.tsx</h4>
+        <div class="file-header"><span>frontend/src/components/ProductGallery.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">ProductImage</span> { id: number; url: string; order: number }
+
+<span class="kw">export function</span> <span class="fn">ProductGallery</span>({ images }: { images: <span class="cls">ProductImage</span>[] }) {
+  <span class="kw">const</span> [active, setActive] = <span class="fn">useState</span>(<span class="num">0</span>)
+
+  <span class="kw">if</span> (!images.length) <span class="kw">return</span> <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"no-image"</span><span class="tag">&gt;</span>Нет фото<span class="tag">&lt;/div&gt;</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, gap: <span class="num">12</span> }}<span class="tag">&gt;</span>
+
+      {<span class="cmt">/* Главное фото */</span>}
+      <span class="tag">&lt;img</span>
+        <span class="attr">src</span>={images[active].url}
+        <span class="attr">alt</span>=<span class="str">"Товар"</span>
+        <span class="attr">style</span>={{ width: <span class="num">320</span>, height: <span class="num">320</span>, objectFit: <span class="str">'cover'</span>, borderRadius: <span class="num">10</span> }}
+      <span class="tag">/&gt;</span>
+
+      {<span class="cmt">/* Миниатюры */</span>}
+      <span class="tag">&lt;div</span> <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, flexDirection: <span class="str">'column'</span>, gap: <span class="num">8</span> }}<span class="tag">&gt;</span>
+        {images.<span class="fn">map</span>((img, i) => (
+          <span class="tag">&lt;img</span>
+            <span class="attr">key</span>={img.id}
+            <span class="attr">src</span>={img.url}
+            <span class="attr">alt</span>=<span class="str">{`Фото ${i + 1}`}</span>
+            <span class="attr">onClick</span>={() => <span class="fn">setActive</span>(i)}
+            <span class="attr">style</span>={{
+              width:      <span class="num">64</span>,
+              height:     <span class="num">64</span>,
+              objectFit:  <span class="str">'cover'</span>,
+              borderRadius: <span class="num">6</span>,
+              cursor:     <span class="str">'pointer'</span>,
+              border:     i === active ? <span class="str">'2px solid #2dd4bf'</span> : <span class="str">'2px solid transparent'</span>,
+              opacity:    i === active ? <span class="num">1</span> : <span class="num">0.7</span>,
+              transition: <span class="str">'all .2s'</span>
+            }}
+          <span class="tag">/&gt;</span>
+        ))}
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <p>Добавь в <code class="inline">ProductPage.tsx</code>:</p>
+        <pre><code><span class="tag">&lt;</span><span class="cls">ProductGallery</span> <span class="attr">images</span>={product.images} <span class="tag">/&gt;</span>
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 3: ПОДПИСКА ── -->
+  <section>
+    <div class="section-label">Часть 3 — Subscriber</div>
+    <h2>📧 Подписка на рассылку</h2>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Backend — POST /api/subscribe</h4>
+        <div class="file-header"><span>backend/src/routes/subscribe.ts</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+
+<span class="kw">const</span> router = <span class="cls">Router</span>()
+
+router.<span class="fn">post</span>(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { email } = req.body
+
+  <span class="kw">if</span> (!email?.includes(<span class="str">'@'</span>))
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'Некорректный email'</span> })
+
+  <span class="cmt">// Проверить — вдруг уже подписан</span>
+  <span class="kw">const</span> exists = <span class="kw">await</span> prisma.subscriber.<span class="fn">findUnique</span>({ where: { email } })
+  <span class="kw">if</span> (exists)
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">409</span>).<span class="fn">json</span>({ error: <span class="str">'Вы уже подписаны'</span> })
+
+  <span class="cmt">// Генерируем промокод для новичка</span>
+  <span class="kw">const</span> coupon = <span class="str">'WELCOME'</span> + <span class="cls">Math</span>.<span class="fn">random</span>().<span class="fn">toString</span>(<span class="num">36</span>).<span class="fn">slice</span>(<span class="num">2</span>, <span class="num">6</span>).<span class="fn">toUpperCase</span>()
+
+  <span class="kw">await</span> prisma.subscriber.<span class="fn">create</span>({ data: { email, coupon } })
+
+  <span class="cmt">// Здесь можно отправить письмо через Resend / SendGrid</span>
+  res.<span class="fn">json</span>({ ok: <span class="kw">true</span>, coupon })
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>React — SubscribeForm.tsx</h4>
+        <div class="file-header"><span>frontend/src/components/SubscribeForm.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">export function</span> <span class="fn">SubscribeForm</span>() {
+  <span class="kw">const</span> [email,  setEmail]  = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [coupon, setCoupon] = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [error,  setError]  = <span class="fn">useState</span>(<span class="str">''</span>)
+
+  <span class="kw">const</span> submit = <span class="kw">async</span> (e: React.<span class="cls">FormEvent</span>) => {
+    e.<span class="fn">preventDefault</span>()
+    <span class="fn">setError</span>(<span class="str">''</span>)
+    <span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/subscribe'</span>, {
+      method:  <span class="str">'POST'</span>,
+      headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+      body:    <span class="cls">JSON</span>.<span class="fn">stringify</span>({ email })
+    })
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>()
+    <span class="kw">if</span> (!res.ok) { <span class="fn">setError</span>(data.error); <span class="kw">return</span> }
+    <span class="fn">setCoupon</span>(data.coupon)
+  }
+
+  <span class="kw">if</span> (coupon) <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;p&gt;</span>🎉 Вы подписаны! Ваш промокод:<span class="tag">&lt;/p&gt;</span>
+      <span class="tag">&lt;strong&gt;</span>{coupon}<span class="tag">&lt;/strong&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;form</span> <span class="attr">onSubmit</span>={submit}<span class="tag">&gt;</span>
+      <span class="tag">&lt;h3&gt;</span>Подпишитесь и получите промокод<span class="tag">&lt;/h3&gt;</span>
+      <span class="tag">&lt;input</span>
+        <span class="attr">type</span>=<span class="str">"email"</span>
+        <span class="attr">value</span>={email}
+        <span class="attr">onChange</span>={e => <span class="fn">setEmail</span>(e.target.value)}
+        <span class="attr">placeholder</span>=<span class="str">"Ваш email"</span>
+        <span class="attr">required</span>
+      <span class="tag">/&gt;</span>
+      {error &amp;&amp; <span class="tag">&lt;p</span> <span class="attr">style</span>={{ color: <span class="str">'#ef4444'</span> }}<span class="tag">&gt;</span>{error}<span class="tag">&lt;/p&gt;</span>}
+      <span class="tag">&lt;button</span> <span class="attr">type</span>=<span class="str">"submit"</span><span class="tag">&gt;</span>Подписаться<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/form&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 4: GDPR ── -->
+  <section>
+    <div class="section-label">Часть 4 — GdprConsent</div>
+    <h2>🍪 Баннер согласия на куки (GDPR)</h2>
+
+    <div class="theory">
+      <strong>GDPR</strong> — требует явного согласия пользователя на обработку данных.
+      Для гостей: сохраняем <code class="inline">guestId</code> (UUID в <code class="inline">localStorage</code>).
+      Для авторизованных: сохраняем <code class="inline">userId</code>.
+    </div>
+
+    <p>Пример баннера:</p>
+    <div class="gdpr-banner" id="gdprDemo">
+      <p>🍪 Мы используем куки для улучшения сайта. <a href="#" style="color:var(--accent)">Подробнее</a></p>
+      <button class="gdpr-accept" onclick="document.getElementById('gdprDemo').style.display='none'">Принять</button>
+    </div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h4>Backend — POST /api/gdpr/accept</h4>
+        <pre><code>router.<span class="fn">post</span>(<span class="str">'/accept'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { guestId } = req.body
+  <span class="kw">const</span> userId = req.userId ?? <span class="kw">null</span>   <span class="cmt">// null для гостей</span>
+
+  <span class="kw">await</span> prisma.gdprConsent.<span class="fn">create</span>({
+    data: { userId, guestId: guestId ?? <span class="kw">null</span> }
+  })
+  res.<span class="fn">json</span>({ ok: <span class="kw">true</span> })
+})
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-body">
+        <h4>React — CookieBanner.tsx</h4>
+        <div class="file-header"><span>frontend/src/components/CookieBanner.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">function</span> <span class="fn">getGuestId</span>() {
+  <span class="kw">let</span> id = localStorage.<span class="fn">getItem</span>(<span class="str">'guestId'</span>)
+  <span class="kw">if</span> (!id) {
+    id = crypto.<span class="fn">randomUUID</span>()
+    localStorage.<span class="fn">setItem</span>(<span class="str">'guestId'</span>, id)
+  }
+  <span class="kw">return</span> id
+}
+
+<span class="kw">export function</span> <span class="fn">CookieBanner</span>() {
+  <span class="kw">const</span> [show, setShow] = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="cmt">// Показать если ещё не принял</span>
+    <span class="kw">if</span> (!localStorage.<span class="fn">getItem</span>(<span class="str">'gdprAccepted'</span>)) <span class="fn">setShow</span>(<span class="kw">true</span>)
+  }, [])
+
+  <span class="kw">const</span> accept = <span class="kw">async</span> () => {
+    localStorage.<span class="fn">setItem</span>(<span class="str">'gdprAccepted'</span>, <span class="str">'1'</span>)
+    <span class="fn">setShow</span>(<span class="kw">false</span>)
+    <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/gdpr/accept'</span>, {
+      method:  <span class="str">'POST'</span>,
+      headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+      body:    <span class="cls">JSON</span>.<span class="fn">stringify</span>({ guestId: <span class="fn">getGuestId</span>() })
+    })
+  }
+
+  <span class="kw">if</span> (!show) <span class="kw">return null</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">style</span>={{
+      position:   <span class="str">'fixed'</span>, bottom: <span class="num">20</span>, left: <span class="num">20</span>, right: <span class="num">20</span>,
+      background: <span class="str">'#1c2230'</span>, border: <span class="str">'1px solid #30363d'</span>,
+      borderRadius: <span class="num">10</span>, padding: <span class="str">'16px 20px'</span>,
+      display: <span class="str">'flex'</span>, justifyContent: <span class="str">'space-between'</span>,
+      alignItems: <span class="str">'center'</span>, gap: <span class="num">16</span>, zIndex: <span class="num">1000</span>
+    }}<span class="tag">&gt;</span>
+      <span class="tag">&lt;p&gt;</span>🍪 Мы используем куки для улучшения сайта.<span class="tag">&lt;/p&gt;</span>
+      <span class="tag">&lt;button</span>
+        <span class="attr">onClick</span>={accept}
+        <span class="attr">style</span>={{ background: <span class="str">'#2dd4bf'</span>, color: <span class="str">'#fff'</span>, border: <span class="str">'none'</span>, padding: <span class="str">'8px 20px'</span>, borderRadius: <span class="num">8</span>, cursor: <span class="str">'pointer'</span>, fontWeight: <span class="num">600</span> }}
+      <span class="tag">&gt;</span>
+        Принять
+      <span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <p>Добавь <code class="inline">&lt;CookieBanner /&gt;</code> в корень <code class="inline">App.tsx</code> — рядом с <code class="inline">&lt;Routes&gt;</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ИТОГ ── -->
+  <section>
+    <div class="card">
+      <h3 style="color:var(--teal);margin-top:0">📊 Итог: что реализовано за 11 лабораторных</h3>
+      <table>
+        <tr><th>Лаб.</th><th>Тема</th><th>Основные фичи</th></tr>
+        <tr><td>1</td><td>Стек и установка</td><td>Архитектура, Node.js, React, PostgreSQL</td></tr>
+        <tr><td>2</td><td>Первый сервер</td><td>Express, Prisma, REST API</td></tr>
+        <tr><td>3</td><td>Первый компонент</td><td>useState, useEffect, ProductCard</td></tr>
+        <tr><td>4</td><td>Корзина</td><td>useCart, CartPage, React Router, бесплатная доставка</td></tr>
+        <tr><td>5</td><td>Авторизация</td><td>JWT, bcrypt, AuthContext, ProtectedRoute</td></tr>
+        <tr><td>6</td><td>Промокоды и рейтинг</td><td>PromoCode, shake-анимация, StarRating, upsert</td></tr>
+        <tr><td>7</td><td>UX-фичи</td><td>Таймер акции, уведомления, тёмная тема + PostgreSQL</td></tr>
+        <tr><td>8</td><td>Интеграция</td><td>Полная схема Prisma, App.tsx, структура проекта</td></tr>
+        <tr><td>9</td><td>Заказы и поиск</td><td>Order + OrderItem, транзакция, фильтры, пагинация, /product/:id</td></tr>
+        <tr><td>10</td><td>Уведомления</td><td>Бейджи, debounce-валидация email, NotificationBell, Избранное</td></tr>
+        <tr><td>11</td><td>Продвинутые</td><td>tsvector FAQ-поиск, галерея, подписка, GDPR-баннер</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>
+          <strong>FAQ live-поиск</strong><br>
+          Добавь несколько строк в таблицу <code class="inline">FaqItem</code> через Prisma Studio. Выполни SQL для создания <code class="inline">tsvector</code> и индекса. Реализуй <code class="inline">FaqPage</code> — при вводе запроса список должен фильтроваться.
+        </li>
+        <li>
+          <strong>Галерея фотографий</strong><br>
+          Добавь несколько строк в <code class="inline">ProductImage</code> для одного товара. Обнови <code class="inline">ProductPage</code> — вместо одного изображения используй <code class="inline">ProductGallery</code>.
+        </li>
+        <li>
+          <strong>Подписка на рассылку</strong><br>
+          Добавь роут и <code class="inline">SubscribeForm</code> в футер. После подписки должен появиться промокод.
+        </li>
+        <li>
+          <strong>⭐ GDPR-баннер</strong><br>
+          Добавь <code class="inline">CookieBanner</code> в <code class="inline">App.tsx</code>. Первый визит — баннер виден. После «Принять» — исчезает и больше не появляется (проверяется через <code class="inline">localStorage</code>).
+        </li>
+        <li>
+          <strong>⭐⭐ Выбор доставки</strong><br>
+          Добавь роут <code class="inline">GET /api/delivery-rates</code> → возвращает строки из таблицы <code class="inline">DeliveryRate</code>.
+          В <code class="inline">CheckoutPage</code> добавь радио-выбор способа доставки. Стоимость доставки прибавляется к <code class="inline">total</code> заказа.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_10.html" class="btn-nav">← Лаб. №10</a>
+    <div class="progress-bar">
+      Лаб. работа 11 из 11
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+      </div>
+    </div>
+    <a href="lab_01.html" class="btn-nav primary">↩ К началу</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+
+  function setThumb(el, emoji) {
+    document.getElementById('galleryMain').textContent = emoji;
+    document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №6 — Промокоды и рейтинг</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0d2137 0%, #0a3d62 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #b8d8f8 100%); }
+  .lab-badge { display: inline-block; background: rgba(88,166,255,.15); border: 1px solid rgba(88,166,255,.4); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  p { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .important { background: rgba(248,81,73,.07); border-left: 3px solid var(--red); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .tip { background: rgba(63,185,80,.07); border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(210,153,34,.07); border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .tag { color: #7ee787; } .attr { color: #ffa657; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  .file-header { display: flex; align-items: center; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--accent); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  /* Демо промокод */
+  .demo-promo { display: flex; gap: 0; margin-bottom: 20px; max-width: 380px; }
+  .demo-promo input { flex: 1; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-right: none; border-radius: 8px 0 0 8px; color: var(--text); font-size: 14px; font-family: monospace; }
+  .demo-promo button { padding: 10px 18px; background: var(--accent); color: #fff; border: 1px solid var(--accent); border-radius: 0 8px 8px 0; font-size: 14px; font-weight: 600; cursor: default; }
+  .demo-promo-ok  { padding: 10px 14px; background: rgba(63,185,80,.1); border: 1px solid var(--green); border-radius: 8px; color: var(--green); font-size: 14px; margin-bottom: 16px; }
+  .demo-promo-err { padding: 10px 14px; background: rgba(248,81,73,.08); border: 1px solid var(--red); border-radius: 8px; color: var(--red); font-size: 14px; margin-bottom: 16px; }
+  /* Демо звёзды */
+  .demo-stars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .star-row { display: flex; align-items: center; gap: 10px; }
+  .stars { display: flex; gap: 3px; }
+  .star { font-size: 20px; cursor: default; }
+  .star.on { color: #f0b132; }
+  .star.off { color: var(--border); }
+  .star-avg { font-size: 15px; font-weight: 700; color: var(--text); }
+  .star-count { font-size: 13px; color: var(--text-muted); }
+  /* Анимация тряски */
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%     { transform: translateX(-6px); }
+    40%     { transform: translateX(6px); }
+    60%     { transform: translateX(-4px); }
+    80%     { transform: translateX(4px); }
+  }
+  .shake-demo { display: inline-block; animation: shake 0.5s ease; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .ref-table-wrap { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; }
+  .ref-table-wrap table { margin: 0; }
+  .ref-table-wrap th { position: sticky; top: 0; z-index: 1; }
+  .cat-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .cat-Кнопки      { background: rgba(88,166,255,.15); color: #58a6ff; }
+  .cat-Карточки    { background: rgba(188,140,255,.15); color: #bc8cff; }
+  .cat-Фильтры     { background: rgba(210,153,34,.15);  color: #d29922; }
+  .cat-Корзина     { background: rgba(63,185,80,.15);   color: #3fb950; }
+  .cat-Таймеры     { background: rgba(248,81,73,.15);   color: #f85149; }
+  .cat-Формы       { background: rgba(255,166,87,.15);  color: #ffa657; }
+  .cat-Навигация   { background: rgba(88,166,255,.12);  color: #79c0ff; }
+  .cat-Слайдеры    { background: rgba(188,140,255,.12); color: #d2a8ff; }
+  .cat-Уведомления { background: rgba(63,185,80,.12);   color: #56d364; }
+  .cat-UX-мелочи   { background: rgba(255,166,87,.12);  color: #ffa657; }
+  .cat-FAQ         { background: rgba(210,153,34,.12);  color: #e3b341; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 6px 0; color: var(--text); font-size: 14.5px; }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--accent); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">Лабораторная работа</div>
+  <h1>№6 — Промокоды и рейтинг</h1>
+  <p>Применение скидки, анимация ошибки shake, звёздный рейтинг с PostgreSQL</p>
+  <nav class="nav-labs">
+    <a href="index.html" style="font-size:11px;padding:5px 9px">🏠</a>
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html" class="active">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ЦЕЛЬ ── -->
+  <section>
+    <div class="section-label">Цель работы</div>
+    <h2>🎯 Что мы сделаем</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--green)">✅ В итоге получим</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li>Поле промокода в корзине</li>
+          <li>При ошибке — поле «трясётся» (shake)</li>
+          <li>При успехе — показывает скидку</li>
+          <li>Интерактивный рейтинг звёздами</li>
+          <li>Средний рейтинг отображается на карточке</li>
+          <li>Один пользователь — одна оценка (upsert)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--accent)">🔑 Новые понятия</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li><strong>@keyframes shake</strong> — CSS-анимация ошибки</li>
+          <li><strong>upsert</strong> — создать или обновить запись</li>
+          <li><strong>@@unique</strong> — уникальная пара полей в Prisma</li>
+          <li><strong>_avg</strong> — агрегация в Prisma (средний рейтинг)</li>
+          <li><strong>CONFIG-pattern</strong> — данные в объекте, не в коде</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 1: ПРОМОКОДЫ ── -->
+  <section>
+    <div class="section-label">Часть 1</div>
+    <h2>🎟️ Промокоды со скидкой</h2>
+
+    <div class="theory">
+      <strong>CONFIG-pattern:</strong> промокоды хранятся в объекте-словаре, а не в разбросанных <code class="inline">if</code>-блоках.
+      Добавить новый промокод = добавить одну строку в объект. Это легко читать и масштабировать.
+    </div>
+
+    <h3>Как будет выглядеть</h3>
+    <div class="demo-promo">
+      <input value="SAVE20" readonly>
+      <button>Применить</button>
+    </div>
+    <div class="demo-promo-ok">✅ Промокод применён: скидка 20%</div>
+    <br>
+    <div class="demo-promo">
+      <input value="WRONGCODE" readonly class="shake-demo">
+      <button>Применить</button>
+    </div>
+    <div class="demo-promo-err">❌ Промокод не найден</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Роут проверки промокода</h4>
+        <div class="file-header"><span>backend/src/routes/promo.ts</span></div>
+        <pre><code><span class="kw">import</span> { Router } <span class="kw">from</span> <span class="str">'express'</span>
+
+<span class="cmt">// CONFIG-pattern: все промокоды в одном объекте</span>
+<span class="kw">const</span> PROMO_CODES: Record&lt;string, { discount: number; label: string }&gt; = {
+  <span class="str">'SAVE10'</span>: { discount: <span class="num">10</span>, label: <span class="str">'Скидка 10%'</span> },
+  <span class="str">'SAVE20'</span>: { discount: <span class="num">20</span>, label: <span class="str">'Скидка 20%'</span> },
+  <span class="str">'FIRST50'</span>: { discount: <span class="num">50</span>, label: <span class="str">'Первая покупка: −50%'</span> },
+}
+
+<span class="kw">const</span> router = <span class="fn">Router</span>()
+
+<span class="cmt">// POST /api/promo/check</span>
+router.post(<span class="str">'/check'</span>, (req, res) =&gt; {
+  <span class="kw">const</span> code = (req.body.code ?? <span class="str">''</span>).<span class="fn">trim</span>().<span class="fn">toUpperCase</span>()
+  <span class="cmt">// trim() убирает пробелы, toUpperCase() делает нечувствительным к регистру</span>
+
+  <span class="kw">const</span> promo = PROMO_CODES[code]
+
+  <span class="kw">if</span> (!promo) {
+    <span class="kw">return</span> res.status(<span class="num">404</span>).json({ error: <span class="str">'Промокод не найден'</span> })
+  }
+
+  res.json(promo)
+  <span class="cmt">// Ответ: { discount: 20, label: 'Скидка 20%' }</span>
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+        <pre><code><span class="cmt">// В index.ts добавить:</span>
+<span class="kw">import</span> promoRouter <span class="kw">from</span> <span class="str">'./routes/promo'</span>
+app.use(<span class="str">'/api/promo'</span>, promoRouter)
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>CSS-анимация shake</h4>
+        <p>Анимация «тряски» — классический UX-паттерн для ошибки ввода. Браузер запускает её добавлением класса.</p>
+        <pre><code><span class="cmt">/* В index.css */</span>
+@keyframes shake {
+  0%,100% { transform: translateX(<span class="num">0</span>);    }
+  20%     { transform: translateX(-<span class="num">6px</span>); }
+  40%     { transform: translateX(<span class="num">6px</span>);  }
+  60%     { transform: translateX(-<span class="num">4px</span>); }
+  80%     { transform: translateX(<span class="num">4px</span>);  }
+}
+
+.shake {
+  animation: shake <span class="num">0.45</span>s ease;
+}
+</code></pre>
+
+        <div class="file-header"><span>frontend/src/components/PromoInput.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useRef } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Props</span> {
+  onApply: (discount: number, label: string) =&gt; <span class="kw">void</span>
+}
+
+<span class="kw">export function</span> <span class="fn">PromoInput</span>({ onApply }: <span class="cls">Props</span>) {
+  <span class="kw">const</span> [code,    setCode]    = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [error,   setError]   = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [success, setSuccess] = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> inputRef = <span class="fn">useRef</span>&lt;HTMLInputElement&gt;(<span class="kw">null</span>)
+  <span class="cmt">// useRef — ссылка на DOM-элемент (без перерендера)</span>
+
+  <span class="kw">const</span> handleApply = <span class="kw">async</span> () =&gt; {
+    <span class="fn">setError</span>(<span class="str">''</span>)
+    <span class="fn">setSuccess</span>(<span class="str">''</span>)
+
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/promo/check'</span>, {
+      method:  <span class="str">'POST'</span>,
+      headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+      body:    JSON.<span class="fn">stringify</span>({ code })
+    })
+
+    <span class="kw">if</span> (!res.ok) {
+      <span class="fn">setError</span>(<span class="str">'Промокод не найден'</span>)
+
+      <span class="cmt">// Запустить анимацию: добавить класс → убрать → добавить снова если нужно</span>
+      <span class="kw">const</span> el = inputRef.current
+      <span class="kw">if</span> (el) {
+        el.classList.<span class="fn">remove</span>(<span class="str">'shake'</span>)
+        <span class="cmt">// void нужен чтобы браузер заметил что класс убрали, перед тем как добавить снова</span>
+        <span class="kw">void</span> el.offsetWidth  <span class="cmt">// reflow trick</span>
+        el.classList.<span class="fn">add</span>(<span class="str">'shake'</span>)
+      }
+      <span class="kw">return</span>
+    }
+
+    <span class="kw">const</span> { discount, label } = <span class="kw">await</span> res.<span class="fn">json</span>()
+    <span class="fn">setSuccess</span>(label)
+    <span class="fn">onApply</span>(discount, label)  <span class="cmt">// передать скидку наверх в CartPage</span>
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"promo-wrap"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"promo-row"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;input</span>
+          <span class="attr">ref</span>={inputRef}                  <span class="cmt">// ref подключаем к инпуту</span>
+          <span class="attr">placeholder</span>=<span class="str">"Промокод"</span>
+          <span class="attr">value</span>={code}
+          <span class="attr">onChange</span>=<span class="tag">{e =&gt;</span> <span class="fn">setCode</span>(e.target.value)}
+        <span class="tag">/&gt;</span>
+        <span class="tag">&lt;button</span> <span class="attr">onClick</span>={handleApply}<span class="tag">&gt;</span>Применить<span class="tag">&lt;/button&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+
+      {error   &amp;&amp; <span class="tag">&lt;p</span> <span class="attr">className</span>=<span class="str">"promo-error"</span><span class="tag">&gt;</span>❌ {error}<span class="tag">&lt;/p&gt;</span>}
+      {success &amp;&amp; <span class="tag">&lt;p</span> <span class="attr">className</span>=<span class="str">"promo-ok"</span><span class="tag">&gt;</span>✅ {success}<span class="tag">&lt;/p&gt;</span>}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <div class="tip">
+          <strong>💡 void el.offsetWidth — reflow trick</strong><br>
+          Браузер оптимизирует: убрать и тут же добавить класс — он «не замечает» изменения.
+          Обращение к <code class="inline">offsetWidth</code> заставляет браузер «сбросить» стили прямо сейчас (reflow),
+          и анимация запускается заново.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 2: РЕЙТИНГ ── -->
+  <section>
+    <div class="section-label">Часть 2</div>
+    <h2>⭐ Рейтинг звёздами</h2>
+
+    <h3>Как будет выглядеть</h3>
+    <div class="demo-stars">
+      <div class="star-row">
+        <span style="font-size:13px;color:var(--text-muted);width:80px">Ваша оценка:</span>
+        <div class="stars">
+          <span class="star on">★</span>
+          <span class="star on">★</span>
+          <span class="star on">★</span>
+          <span class="star on">★</span>
+          <span class="star off">★</span>
+        </div>
+        <span style="font-size:13px;color:var(--text-muted)">4 из 5</span>
+      </div>
+      <div class="star-row">
+        <span style="font-size:13px;color:var(--text-muted);width:80px">Средний:</span>
+        <span class="star-avg">★ 4.2</span>
+        <span class="star-count">(38 оценок)</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Модель Rating в Prisma</h4>
+        <div class="file-header"><span>prisma/schema.prisma — добавить</span></div>
+        <pre><code>model Rating {
+  id        Int      @id @default(autoincrement())
+  score     Int      <span class="cmt">// 1–5</span>
+  userId    Int
+  productId Int
+  user      User     @relation(fields: [userId],    references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  <span class="cmt">// @@unique — комбинация userId+productId уникальна
+  // = один пользователь ставит одну оценку одному товару</span>
+}
+
+<span class="cmt">// В модели Product добавить обратную связь:</span>
+model Product {
+  <span class="cmt">// ... существующие поля ...</span>
+  ratings Rating[]
+}
+</code></pre>
+        <pre><code>npx prisma migrate dev --name add-ratings
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Роут сохранения и получения рейтинга</h4>
+        <div class="file-header"><span>backend/src/routes/ratings.ts</span></div>
+        <pre><code><span class="kw">import</span> { Router }      <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma }      <span class="kw">from</span> <span class="str">'../index'</span>
+<span class="kw">import</span> { requireAuth } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+
+<span class="kw">const</span> router = <span class="fn">Router</span>()
+
+<span class="cmt">// POST /api/ratings — поставить оценку (требует авторизации)</span>
+router.post(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> { productId, score } = req.body
+  <span class="kw">const</span> userId = req.userId!
+
+  <span class="cmt">// Валидация: score должен быть 1–5</span>
+  <span class="kw">if</span> (score &lt; <span class="num">1</span> || score &gt; <span class="num">5</span> || !Number.isInteger(score)) {
+    <span class="kw">return</span> res.status(<span class="num">400</span>).json({ error: <span class="str">'score должен быть 1–5'</span> })
+  }
+
+  <span class="cmt">// upsert = UPDATE если запись есть, INSERT если нет
+  // Это атомарная операция — не нужны два отдельных запроса</span>
+  <span class="kw">await</span> prisma.rating.<span class="fn">upsert</span>({
+    where:  { userId_productId: { userId, productId } }, <span class="cmt">// условие поиска</span>
+    update: { score },                                    <span class="cmt">// что обновить</span>
+    create: { userId, productId, score }                  <span class="cmt">// что создать, если не нашли</span>
+  })
+
+  <span class="cmt">// Вернуть обновлённый средний рейтинг</span>
+  <span class="kw">const</span> agg = <span class="kw">await</span> prisma.rating.<span class="fn">aggregate</span>({
+    where:  { productId },
+    _avg:   { score: <span class="kw">true</span> },   <span class="cmt">// вычислить среднее поля score</span>
+    _count: { score: <span class="kw">true</span> }    <span class="cmt">// посчитать количество оценок</span>
+  })
+
+  res.json({
+    avg:   +(agg._avg.score ?? <span class="num">0</span>).<span class="fn">toFixed</span>(<span class="num">1</span>),  <span class="cmt">// округлить до 1 знака</span>
+    count: agg._count.score
+  })
+})
+
+<span class="cmt">// GET /api/ratings/:productId — получить средний рейтинг</span>
+router.get(<span class="str">'/:productId'</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> productId = +req.params.productId
+
+  <span class="kw">const</span> agg = <span class="kw">await</span> prisma.rating.<span class="fn">aggregate</span>({
+    where: { productId },
+    _avg:  { score: <span class="kw">true</span> },
+    _count:{ score: <span class="kw">true</span> }
+  })
+
+  res.json({
+    avg:   +(agg._avg.score ?? <span class="num">0</span>).<span class="fn">toFixed</span>(<span class="num">1</span>),
+    count: agg._count.score
+  })
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Компонент StarRating</h4>
+        <p>Интерактивные звёзды: наводим — подсвечиваются, кликаем — сохраняем оценку.</p>
+        <div class="file-header"><span>frontend/src/components/StarRating.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Props</span> {
+  productId: number
+  readonly?: boolean   <span class="cmt">// если true — только отображение без клика</span>
+}
+
+<span class="kw">export function</span> <span class="fn">StarRating</span>({ productId, readonly = <span class="kw">false</span> }: <span class="cls">Props</span>) {
+  <span class="kw">const</span> [avg,    setAvg]    = <span class="fn">useState</span>(<span class="num">0</span>)
+  <span class="kw">const</span> [count,  setCount]  = <span class="fn">useState</span>(<span class="num">0</span>)
+  <span class="kw">const</span> [hover,  setHover]  = <span class="fn">useState</span>(<span class="num">0</span>)  <span class="cmt">// над какой звездой мышь</span>
+  <span class="kw">const</span> [myRate, setMyRate] = <span class="fn">useState</span>(<span class="num">0</span>)  <span class="cmt">// моя текущая оценка</span>
+
+  <span class="cmt">// Загрузить рейтинг при монтировании компонента</span>
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetch</span>(<span class="str">`/api/ratings/${productId}`</span>)
+      .<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(d =&gt; { <span class="fn">setAvg</span>(d.avg); <span class="fn">setCount</span>(d.count) })
+  }, [productId])
+
+  <span class="kw">const</span> handleClick = <span class="kw">async</span> (score: number) =&gt; {
+    <span class="kw">if</span> (readonly) <span class="kw">return</span>
+    <span class="fn">setMyRate</span>(score)   <span class="cmt">// optimistic update</span>
+
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/ratings'</span>, {
+      method:  <span class="str">'POST'</span>,
+      headers: {
+        <span class="str">'Content-Type'</span>:  <span class="str">'application/json'</span>,
+        <span class="str">'Authorization'</span>: <span class="str">`Bearer ${localStorage.getItem('token')}`</span>
+      },
+      body: JSON.<span class="fn">stringify</span>({ productId, score })
+    })
+    <span class="kw">if</span> (res.ok) {
+      <span class="kw">const</span> updated = <span class="kw">await</span> res.<span class="fn">json</span>()
+      <span class="fn">setAvg</span>(updated.avg)
+      <span class="fn">setCount</span>(updated.count)
+    }
+  }
+
+  <span class="cmt">// Какую звезду подсветить: hover имеет приоритет над myRate</span>
+  <span class="kw">const</span> filled = hover || myRate || <span class="cls">Math</span>.<span class="fn">round</span>(avg)
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"star-rating"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"stars"</span><span class="tag">&gt;</span>
+        {[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>,<span class="num">5</span>].<span class="fn">map</span>(n =&gt; (
+          <span class="tag">&lt;span</span>
+            <span class="attr">key</span>={n}
+            <span class="attr">className</span>={n &lt;= filled ? <span class="str">'star on'</span> : <span class="str">'star off'</span>}
+            <span class="attr">onMouseEnter</span>={() =&gt; !readonly &amp;&amp; <span class="fn">setHover</span>(n)}
+            <span class="attr">onMouseLeave</span>={() =&gt; <span class="fn">setHover</span>(<span class="num">0</span>)}
+            <span class="attr">onClick</span>={() =&gt; <span class="fn">handleClick</span>(n)}
+          <span class="tag">&gt;</span>★<span class="tag">&lt;/span&gt;</span>
+        ))}
+      <span class="tag">&lt;/div&gt;</span>
+      <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"star-info"</span><span class="tag">&gt;</span>
+        {avg &gt; <span class="num">0</span> ? <span class="str">`${avg} (${count})`</span> : <span class="str">'Нет оценок'</span>}
+      <span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <div class="tip">
+          <strong>💡 Почему upsert, а не два запроса?</strong><br>
+          Если делать <code class="inline">findFirst</code> + <code class="inline">create/update</code> — между ними может успеть прийти второй запрос и создать дублирующую запись (race condition).
+          <code class="inline">upsert</code> атомарен: БД сама решает создать или обновить, без риска дубликатов.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Добавить StarRating в ProductCard</h4>
+        <div class="file-header"><span>frontend/src/components/ProductCard.tsx — обновить</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">StarRating</span> } <span class="kw">from</span> <span class="str">'./StarRating'</span>
+
+<span class="cmt">// Внутри JSX карточки добавить:</span>
+<span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"card-rating"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;StarRating</span> <span class="attr">productId</span>={product.id} <span class="tag">/&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ИТОГ ── -->
+  <section>
+    <div class="section-label">Итог</div>
+    <h2>📋 Итоговая структура</h2>
+    <pre><code>backend/src/
+└── routes/
+    ├── promo.ts     <span class="cmt">← POST /api/promo/check, CONFIG-pattern</span>
+    └── ratings.ts   <span class="cmt">← POST /api/ratings, GET /api/ratings/:id, upsert</span>
+
+frontend/src/
+└── components/
+    ├── PromoInput.tsx   <span class="cmt">← поле ввода, shake-анимация при ошибке</span>
+    └── StarRating.tsx   <span class="cmt">← 5 звёзд, hover, оценка, средний рейтинг</span>
+</code></pre>
+
+    <div class="card">
+      <table>
+        <tr><th>Операция</th><th>HTTP</th><th>Роут</th><th>Auth</th></tr>
+        <tr><td>Проверить промокод</td><td>POST</td><td>/api/promo/check</td><td>Нет</td></tr>
+        <tr><td>Поставить оценку</td><td>POST</td><td>/api/ratings</td><td>✅ требует</td></tr>
+        <tr><td>Средний рейтинг</td><td>GET</td><td>/api/ratings/:id</td><td>Нет</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>Реализуйте промокоды. Введите «SAVE20» — получите скидку. Введите «ABC» — увидьте shake-анимацию.</li>
+        <li>Добавьте компонент <code class="inline">PromoInput</code> в <code class="inline">CartPage</code> и передавайте скидку в <code class="inline">useCart</code> для пересчёта итоговой суммы.</li>
+        <li>Реализуйте <code class="inline">StarRating</code>. Убедитесь что одинаковую оценку можно поставить повторно (upsert обновит запись, а не создаст вторую).</li>
+        <li>Подтвердите через Prisma Studio (<code class="inline">npx prisma studio</code>), что в таблице <code class="inline">Rating</code> для одного userId+productId всегда только одна строка.</li>
+        <li class="star">⭐ Добавьте 4-й промокод «NEWUSER» со скидкой 15%. Никакой код менять не нужно — только объект <code class="inline">PROMO_CODES</code>.</li>
+        <li class="star">⭐ Реализуйте «использование» промокода: после применения промокода сохраните его в таблице (модель <code class="inline">PromoUsage</code>) и не давайте использовать дважды одному пользователю.</li>
+        <li class="star">⭐⭐ Добавьте поля <code class="inline">minCartTotal</code> и <code class="inline">expiresAt</code> к промокодам в объекте конфигурации. Валидируйте: промокод применяется только если сумма корзины ≥ minCartTotal и текущая дата ≤ expiresAt.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_05.html" class="btn-nav">← Лаб. №5</a>
+    <div class="progress-bar">
+      Лаб. работа 6 из 8
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_07.html" class="btn-nav primary">Лаб. №7 →</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>

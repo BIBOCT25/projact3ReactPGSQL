@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №12 — Пароль, мини-корзина, доставка, история заказов, скелетон, тосты</title>
+<style>
+  :root {
+    --bg:#0d1117; --surface:#161b22; --card:#1c2230; --border:#30363d;
+    --text:#e6edf3; --text-muted:#8b949e; --accent:#58a6ff;
+    --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --purple:#bc8cff; --orange:#ffa657; --code-bg:#0d1117;
+    --teal:#2dd4bf; --pink:#f472b6;
+  }
+  body.light {
+    --bg:#f6f8fa; --surface:#ffffff; --card:#f0f6fc; --border:#d0d7de;
+    --text:#1f2328; --text-muted:#636c76; --accent:#0969da;
+    --green:#1a7f37; --yellow:#9a6700; --red:#d1242f;
+    --purple:#8250df; --orange:#bc4c00; --code-bg:#f6f8fa;
+    --teal:#0d9488; --pink:#db2777;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;transition:background .3s,color .3s}
+  header{background:linear-gradient(135deg,#1a0a2e 0%,#0d0a20 100%);padding:40px 24px 32px;text-align:center;border-bottom:1px solid var(--border);position:relative}
+  body.light header{background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%)}
+  .lab-badge{display:inline-block;background:rgba(188,140,255,.15);border:1px solid rgba(188,140,255,.4);color:var(--purple);padding:4px 14px;border-radius:20px;font-size:13px;margin-bottom:12px;letter-spacing:.5px}
+  header h1{font-size:clamp(20px,3.5vw,32px);color:var(--text);margin-bottom:8px}
+  header p{color:var(--text-muted);font-size:15px;max-width:680px;margin:0 auto}
+  .nav-labs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .nav-labs a{padding:5px 12px;border-radius:8px;font-size:13px;text-decoration:none;background:rgba(255,255,255,.07);color:var(--text-muted);border:1px solid var(--border);transition:.2s}
+  .nav-labs a:hover,.nav-labs a.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .theme-btn{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--text);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
+  main{max-width:860px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:52px}
+  .section-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+  h2{font-size:22px;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  h3{font-size:17px;color:var(--accent);margin:24px 0 10px}
+  p{color:var(--text-muted);font-size:15px;margin-bottom:12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+  .theory{background:rgba(88,166,255,.06);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .theory strong{color:var(--accent)}
+  .tip{background:rgba(63,185,80,.07);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .warn{background:rgba(210,153,34,.07);border-left:3px solid var(--yellow);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:20px;overflow-x:auto;font-size:13.5px;line-height:1.65;margin-bottom:16px;tab-size:2}
+  code{font-family:'Cascadia Code','Fira Code','Consolas',monospace}
+  .inline{background:var(--card);padding:2px 7px;border-radius:4px;font-family:monospace;font-size:13px}
+  .kw{color:#ff7b72}.fn{color:#d2a8ff}.str{color:#a5d6ff}
+  .cmt{color:#8b949e;font-style:italic}.num{color:#79c0ff}
+  .cls{color:#ffa657}.tag{color:#7ee787}.attr{color:#ffa657}
+  .step{display:flex;gap:16px;align-items:flex-start;margin-bottom:32px}
+  .step-num{min-width:36px;height:36px;background:var(--purple);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;margin-top:2px}
+  .step-body{flex:1}
+  .step-body h4{font-size:16px;color:var(--text);margin-bottom:8px}
+  .step-body p{color:var(--text-muted);margin-bottom:10px;font-size:14.5px}
+  .file-header{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:10px 10px 0 0;padding:10px 16px;font-size:13px;color:var(--text-muted)}
+  .file-header span{color:var(--purple);font-family:monospace}
+  .file-header+pre{border-radius:0 0 10px 10px;margin-top:0}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  th{background:var(--card);color:var(--text-muted);font-size:12px;letter-spacing:.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border)}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .tasks{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px}
+  .tasks h3{color:var(--yellow);margin-top:0}
+  .tasks ol{padding-left:20px}
+  .tasks li{padding:8px 0;color:var(--text);font-size:14.5px;border-bottom:1px solid var(--border)}
+  .tasks li:last-child{border-bottom:none}
+  .bottom-nav{display:flex;justify-content:space-between;align-items:center;margin-top:60px;padding-top:24px;border-top:1px solid var(--border)}
+  .btn-nav{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:.2s;border:2px solid var(--accent);color:var(--accent);background:transparent}
+  .btn-nav:hover{background:var(--accent);color:#fff}
+  .btn-nav.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn-nav.primary:hover{opacity:.85}
+  .progress-bar{text-align:center;color:var(--text-muted);font-size:13px}
+  .progress-dots{display:flex;gap:5px;justify-content:center;margin-top:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .dot.done{background:var(--green)}
+  .dot.active{background:var(--purple);box-shadow:0 0 6px var(--purple)}
+  /* Demo: password strength */
+  .strength-bars{display:flex;gap:4px;margin:8px 0}
+  .bar{height:5px;flex:1;border-radius:3px;transition:background .3s}
+  /* Demo: skeleton */
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  .skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--border) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+  /* Demo: toast */
+  .toast-demo{position:relative;height:80px}
+  .toast{position:absolute;right:0;top:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:.3s;white-space:nowrap}
+  .toast.success{border-left:3px solid var(--green)}
+  .toast.error{border-left:3px solid var(--red)}
+  /* Demo: mini-cart */
+  .mini-cart-demo{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:280px}
+  .mini-cart-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+  .mini-cart-item:last-child{border-bottom:none}
+  /* Delivery radio */
+  .delivery-option{display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:8px;transition:.2s}
+  .delivery-option.selected{border-color:var(--purple)}
+  .delivery-option input{width:16px;height:16px;accent-color:var(--purple)}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">🔧 Продвинутые паттерны</div>
+  <h1>№12 — Пароль, мини-корзина, доставка, история, скелетон, тосты</h1>
+  <p>PasswordStrength, мини-корзина dropdown, выбор доставки, OrderHistory, Skeleton loader, Toast-уведомления</p>
+  <nav class="nav-labs">
+    <a href="index.html" style="font-size:11px;padding:5px 9px">🏠</a>
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html" class="active">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ═══════════════════════════════════════
+       ЧАСТЬ 1 — PasswordStrength (#18)
+  ════════════════════════════════════════ -->
+  <section>
+    <div class="section-label">Часть 1 — Фича #18</div>
+    <h2>🔐 Индикатор силы пароля</h2>
+
+    <div class="theory">
+      <strong>Зачем:</strong> слабые пароли — главная причина взломов аккаунтов.
+      Индикатор силы наглядно подсказывает пользователю ещё в форме, не дожидаясь ответа сервера.
+      Backend хранит только <code class="inline">bcrypt</code>-хеш — никогда не сам пароль.
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Логика оценки силы пароля</h4>
+        <p>4 уровня: Слабый → Средний → Хороший → Сильный. Оценка полностью на фронтенде — нет смысла делать API.</p>
+
+        <p>Демо (интерактивное):</p>
+        <input id="pwdDemo" type="password" placeholder="Введи пароль..."
+          style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;margin-bottom:8px"
+          oninput="updateStrength(this.value)">
+        <div class="strength-bars">
+          <div class="bar" id="bar0" style="background:var(--border)"></div>
+          <div class="bar" id="bar1" style="background:var(--border)"></div>
+          <div class="bar" id="bar2" style="background:var(--border)"></div>
+          <div class="bar" id="bar3" style="background:var(--border)"></div>
+        </div>
+        <div id="strengthLabel" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+
+        <div class="file-header"><span>frontend/src/components/PasswordStrength.tsx</span></div>
+        <pre><code><span class="kw">interface</span> <span class="cls">Props</span> { password: string }
+
+<span class="kw">function</span> <span class="fn">getStrength</span>(p: string): number {
+  <span class="kw">if</span> (p.length &lt; <span class="num">6</span>)  <span class="kw">return</span> <span class="num">0</span>  <span class="cmt">// Слабый</span>
+  <span class="kw">if</span> (p.length &lt; <span class="num">10</span>) <span class="kw">return</span> <span class="num">1</span>  <span class="cmt">// Средний</span>
+  <span class="kw">const</span> hasUpper = /[A-Z]/.test(p)
+  <span class="kw">const</span> hasDigit = /[0-9]/.test(p)
+  <span class="kw">const</span> hasSpec  = /[^a-zA-Z0-9]/.test(p)
+  <span class="kw">if</span> (hasUpper &amp;&amp; hasDigit &amp;&amp; hasSpec) <span class="kw">return</span> <span class="num">3</span>  <span class="cmt">// Сильный</span>
+  <span class="kw">if</span> (hasUpper &amp;&amp; hasDigit)            <span class="kw">return</span> <span class="num">2</span>  <span class="cmt">// Хороший</span>
+  <span class="kw">return</span> <span class="num">1</span>
+}
+
+<span class="kw">const</span> LABELS = [<span class="str">'Слабый'</span>, <span class="str">'Средний'</span>, <span class="str">'Хороший'</span>, <span class="str">'Сильный'</span>]
+<span class="kw">const</span> COLORS = [<span class="str">'#f85149'</span>, <span class="str">'#f59e0b'</span>, <span class="str">'#3b82f6'</span>, <span class="str">'#10b981'</span>]
+
+<span class="kw">export function</span> <span class="fn">PasswordStrength</span>({ password }: <span class="cls">Props</span>) {
+  <span class="kw">const</span> strength = <span class="fn">getStrength</span>(password)
+  <span class="kw">const</span> color    = COLORS[strength]
+
+  <span class="kw">if</span> (!password) <span class="kw">return null</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">style</span>={{ marginTop: <span class="num">6</span> }}<span class="tag">&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, gap: <span class="num">4</span> }}<span class="tag">&gt;</span>
+        {[<span class="num">0</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>].<span class="fn">map</span>(i => (
+          <span class="tag">&lt;div</span> <span class="attr">key</span>={i} <span class="attr">style</span>={{
+            height: <span class="num">5</span>, flex: <span class="num">1</span>, borderRadius: <span class="num">3</span>,
+            background: i &lt;= strength ? color : <span class="str">'#e5e7eb'</span>,
+            transition: <span class="str">'background 0.3s'</span>
+          }} <span class="tag">/&gt;</span>
+        ))}
+      <span class="tag">&lt;/div&gt;</span>
+      <span class="tag">&lt;span</span> <span class="attr">style</span>={{ fontSize: <span class="num">12</span>, color }}<span class="tag">&gt;</span>
+        {LABELS[strength]}
+      <span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Интеграция в RegisterForm</h4>
+        <p>Добавь в <code class="inline">RegisterForm.tsx</code> — просто передай текущее значение поля:</p>
+        <pre><code><span class="kw">import</span> { <span class="cls">PasswordStrength</span> } <span class="kw">from</span> <span class="str">'./PasswordStrength'</span>
+
+<span class="kw">function</span> <span class="fn">RegisterForm</span>() {
+  <span class="kw">const</span> [password, setPassword] = <span class="fn">useState</span>(<span class="str">''</span>)
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;form&gt;</span>
+      <span class="tag">&lt;input</span>
+        <span class="attr">type</span>=<span class="str">"password"</span>
+        <span class="attr">value</span>={password}
+        <span class="attr">onChange</span>={e => <span class="fn">setPassword</span>(e.target.value)}
+        <span class="attr">placeholder</span>=<span class="str">"Пароль"</span>
+      <span class="tag">/&gt;</span>
+      <span class="tag">&lt;</span><span class="cls">PasswordStrength</span> <span class="attr">password</span>={password} <span class="tag">/&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">type</span>=<span class="str">"submit"</span><span class="tag">&gt;</span>Зарегистрироваться<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/form&gt;</span>
+  )
+}
+</code></pre>
+        <div class="tip">
+          <strong>Правило:</strong> минимальная длина — 8 символов + хотя бы одна цифра и одна заглавная буква. Добавь <code class="inline">disabled={strength &lt; 2}</code> на кнопку — нельзя зарегистрироваться со слабым паролем.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ЧАСТЬ 2 — Мини-корзина dropdown
+  ════════════════════════════════════════ -->
+  <section>
+    <div class="section-label">Часть 2 — Фичи #11–12</div>
+    <h2>🛒 Мини-корзина в шапке (dropdown)</h2>
+
+    <div class="theory">
+      <strong>Паттерн:</strong> при наведении/клике на иконку корзины в шапке — выпадающая панель с товарами.
+      Пользователь может сразу удалить товар или перейти к оформлению — без полного перехода на страницу корзины.
+    </div>
+
+    <p>Демо-превью:</p>
+    <div style="position:relative;display:inline-block;margin-bottom:16px">
+      <button onclick="document.getElementById('miniCartDropdown').style.display = document.getElementById('miniCartDropdown').style.display==='none'?'block':'none'"
+        style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:8px;cursor:pointer;font-size:15px;position:relative">
+        🛒 Корзина
+        <span style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">2</span>
+      </button>
+      <div id="miniCartDropdown" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:10">
+        <div class="mini-cart-demo">
+          <div class="mini-cart-item"><span>👟 Кроссовки Nike</span><span style="color:var(--text-muted)">2 990 ₽</span></div>
+          <div class="mini-cart-item"><span>👕 Футболка</span><span style="color:var(--text-muted)">890 ₽</span></div>
+          <div style="padding:10px 0 4px;display:flex;justify-content:space-between;font-weight:600">
+            <span>Итого:</span><span>3 880 ₽</span>
+          </div>
+          <a href="#" style="display:block;text-align:center;background:var(--purple);color:#fff;padding:10px;border-radius:8px;text-decoration:none;margin-top:8px;font-weight:600">Оформить заказ</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Хук useMiniCart + useClickOutside</h4>
+        <p>Закрывать dropdown нужно при клике вне него. Для этого — отдельный хук:</p>
+        <div class="file-header"><span>frontend/src/hooks/useClickOutside.ts</span></div>
+        <pre><code><span class="kw">import</span> { useEffect, <span class="cls">RefObject</span> } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">export function</span> <span class="fn">useClickOutside</span>(
+  ref: <span class="cls">RefObject</span>&lt;<span class="cls">HTMLElement</span>&gt;,
+  handler: () => <span class="kw">void</span>
+) {
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">const</span> listener = (e: <span class="cls">MouseEvent</span>) => {
+      <span class="kw">if</span> (!ref.current || ref.current.<span class="fn">contains</span>(e.target <span class="kw">as</span> <span class="cls">Node</span>)) <span class="kw">return</span>
+      <span class="fn">handler</span>()
+    }
+    document.<span class="fn">addEventListener</span>(<span class="str">'mousedown'</span>, listener)
+    <span class="kw">return</span> () => document.<span class="fn">removeEventListener</span>(<span class="str">'mousedown'</span>, listener)
+  }, [ref, handler])
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Компонент MiniCart</h4>
+        <div class="file-header"><span>frontend/src/components/MiniCart.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useRef, useState } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { useNavigate } <span class="kw">from</span> <span class="str">'react-router-dom'</span>
+<span class="kw">import</span> { <span class="fn">useClickOutside</span> } <span class="kw">from</span> <span class="str">'../hooks/useClickOutside'</span>
+<span class="kw">import</span> { <span class="fn">useCart</span> } <span class="kw">from</span> <span class="str">'../hooks/useCart'</span>
+
+<span class="kw">export function</span> <span class="fn">MiniCart</span>() {
+  <span class="kw">const</span> [open, setOpen]  = <span class="fn">useState</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> wrapRef          = <span class="fn">useRef</span>&lt;<span class="cls">HTMLDivElement</span>&gt;(<span class="kw">null</span>)
+  <span class="kw">const</span> { cart, remove } = <span class="fn">useCart</span>()
+  <span class="kw">const</span> navigate         = <span class="fn">useNavigate</span>()
+
+  <span class="fn">useClickOutside</span>(wrapRef, () => <span class="fn">setOpen</span>(<span class="kw">false</span>))
+
+  <span class="kw">const</span> count = cart?.items.<span class="fn">reduce</span>((s, i) => s + i.qty, <span class="num">0</span>) ?? <span class="num">0</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">ref</span>={wrapRef} <span class="attr">style</span>={{ position: <span class="str">'relative'</span> }}<span class="tag">&gt;</span>
+
+      {<span class="cmt">/* Кнопка-триггер */</span>}
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={() => <span class="fn">setOpen</span>(o => !o)} <span class="attr">style</span>={{ position: <span class="str">'relative'</span> }}<span class="tag">&gt;</span>
+        🛒
+        {count &gt; <span class="num">0</span> &amp;&amp; (
+          <span class="tag">&lt;span</span> <span class="attr">style</span>={{
+            position: <span class="str">'absolute'</span>, top: <span class="num">-6</span>, right: <span class="num">-6</span>,
+            background: <span class="str">'#ef4444'</span>, color: <span class="str">'#fff'</span>,
+            borderRadius: <span class="str">'50%'</span>, width: <span class="num">18</span>, height: <span class="num">18</span>,
+            fontSize: <span class="num">11</span>, fontWeight: <span class="str">'bold'</span>,
+            display: <span class="str">'flex'</span>, alignItems: <span class="str">'center'</span>, justifyContent: <span class="str">'center'</span>
+          }}<span class="tag">&gt;</span>
+            {count &gt; <span class="num">99</span> ? <span class="str">'99+'</span> : count}
+          <span class="tag">&lt;/span&gt;</span>
+        )}
+      <span class="tag">&lt;/button&gt;</span>
+
+      {<span class="cmt">/* Dropdown */</span>}
+      {open &amp;&amp; (
+        <span class="tag">&lt;div</span> <span class="attr">style</span>={{
+          position: <span class="str">'absolute'</span>, right: <span class="num">0</span>, top: <span class="str">'calc(100% + 8px)'</span>,
+          background: <span class="str">'#161b22'</span>, border: <span class="str">'1px solid #30363d'</span>,
+          borderRadius: <span class="num">10</span>, padding: <span class="num">16</span>, minWidth: <span class="num">280</span>, zIndex: <span class="num">50</span>,
+          boxShadow: <span class="str">'0 8px 32px rgba(0,0,0,.5)'</span>
+        }}<span class="tag">&gt;</span>
+          {!cart?.items.length ? (
+            <span class="tag">&lt;p</span> <span class="attr">style</span>={{ textAlign: <span class="str">'center'</span>, color: <span class="str">'#8b949e'</span> }}<span class="tag">&gt;</span>Корзина пуста<span class="tag">&lt;/p&gt;</span>
+          ) : (
+            <span class="tag">&lt;&gt;</span>
+              {cart.items.<span class="fn">map</span>(item => (
+                <span class="tag">&lt;div</span> <span class="attr">key</span>={item.id}
+                  <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, justifyContent: <span class="str">'space-between'</span>, padding: <span class="str">'8px 0'</span>, borderBottom: <span class="str">'1px solid #30363d'</span> }}<span class="tag">&gt;</span>
+                  <span class="tag">&lt;span&gt;</span>{item.product.name}<span class="tag">&lt;/span&gt;</span>
+                  <span class="tag">&lt;span&gt;</span>{item.product.price * item.qty} ₽<span class="tag">&lt;/span&gt;</span>
+                <span class="tag">&lt;/div&gt;</span>
+              ))}
+              <span class="tag">&lt;div</span> <span class="attr">style</span>={{ padding: <span class="str">'10px 0 4px'</span>, fontWeight: <span class="num">600</span>, display: <span class="str">'flex'</span>, justifyContent: <span class="str">'space-between'</span> }}<span class="tag">&gt;</span>
+                <span class="tag">&lt;span&gt;</span>Итого:<span class="tag">&lt;/span&gt;</span>
+                <span class="tag">&lt;span&gt;</span>{cart.subtotal} ₽<span class="tag">&lt;/span&gt;</span>
+              <span class="tag">&lt;/div&gt;</span>
+              <span class="tag">&lt;button</span>
+                <span class="attr">onClick</span>={() => { <span class="fn">setOpen</span>(<span class="kw">false</span>); <span class="fn">navigate</span>(<span class="str">'/checkout'</span>) }}
+                <span class="attr">style</span>={{ width: <span class="str">'100%'</span>, marginTop: <span class="num">8</span>, padding: <span class="str">'10px'</span>, background: <span class="str">'#58a6ff'</span>, color: <span class="str">'#fff'</span>, border: <span class="str">'none'</span>, borderRadius: <span class="num">8</span>, cursor: <span class="str">'pointer'</span>, fontWeight: <span class="num">600</span> }}
+              <span class="tag">&gt;</span>
+                Оформить заказ
+              <span class="tag">&lt;/button&gt;</span>
+            <span class="tag">&lt;/&gt;</span>
+          )}
+        <span class="tag">&lt;/div&gt;</span>
+      )}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <p>Заменить в <code class="inline">App.tsx</code> обычный счётчик на <code class="inline">&lt;MiniCart /&gt;</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ЧАСТЬ 3 — DeliveryRate
+  ════════════════════════════════════════ -->
+  <section>
+    <div class="section-label">Часть 3 — DeliveryRate (Prisma-схема)</div>
+    <h2>🚚 Выбор способа доставки при оформлении</h2>
+
+    <div class="theory">
+      <strong>Модель DeliveryRate</strong> хранит варианты доставки (курьер, самовывоз, почта) с ценами.
+      Пользователь выбирает при оформлении — цена прибавляется к <code class="inline">total</code> заказа.
+    </div>
+
+    <p>Демо (интерактивное):</p>
+    <div id="deliveryDemo" style="max-width:400px;margin-bottom:16px">
+      <label class="delivery-option selected" onclick="selectDelivery(this, 0)">
+        <input type="radio" name="delivery" checked> <span>🚴 Курьер — <strong>299 ₽</strong></span>
+      </label>
+      <label class="delivery-option" onclick="selectDelivery(this, 299)">
+        <input type="radio" name="delivery"> <span>🏪 Самовывоз — <strong>Бесплатно</strong></span>
+      </label>
+      <label class="delivery-option" onclick="selectDelivery(this, 199)">
+        <input type="radio" name="delivery"> <span>📦 Почта России — <strong>199 ₽</strong></span>
+      </label>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Backend — GET /api/delivery-rates</h4>
+        <div class="file-header"><span>backend/src/routes/delivery.ts</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+
+<span class="kw">const</span> router = <span class="cls">Router</span>()
+
+router.<span class="fn">get</span>(<span class="str">'/'</span>, <span class="kw">async</span> (_req, res) => {
+  <span class="kw">const</span> rates = <span class="kw">await</span> prisma.deliveryRate.<span class="fn">findMany</span>({
+    orderBy: { price: <span class="str">'asc'</span> }
+  })
+  res.<span class="fn">json</span>(rates)
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+        <p>В <code class="inline">index.ts</code> добавь: <code class="inline">app.use('/api/delivery-rates', deliveryRouter)</code></p>
+        <p>Заполни тестовые данные через Prisma Studio (или seed-скрипт):</p>
+        <pre><code><span class="cmt">// prisma/seed.ts</span>
+<span class="kw">await</span> prisma.deliveryRate.<span class="fn">createMany</span>({
+  data: [
+    { name: <span class="str">'Курьер'</span>,        price: <span class="num">299</span> },
+    { name: <span class="str">'Самовывоз'</span>,     price: <span class="num">0</span>   },
+    { name: <span class="str">'Почта России'</span>,  price: <span class="num">199</span> },
+  ]
+})
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>React — CheckoutPage с выбором доставки</h4>
+        <div class="file-header"><span>frontend/src/pages/CheckoutPage.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="fn">useCart</span> } <span class="kw">from</span> <span class="str">'../hooks/useCart'</span>
+
+<span class="kw">interface</span> <span class="cls">DeliveryRate</span> { id: number; name: string; price: number }
+
+<span class="kw">export function</span> <span class="fn">CheckoutPage</span>() {
+  <span class="kw">const</span> { cart }                  = <span class="fn">useCart</span>()
+  <span class="kw">const</span> [rates, setRates]         = <span class="fn">useState</span>&lt;<span class="cls">DeliveryRate</span>[]&gt;([])
+  <span class="kw">const</span> [selected, setSelected]   = <span class="fn">useState</span>&lt;number | null&gt;(<span class="kw">null</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetch</span>(<span class="str">'/api/delivery-rates'</span>)
+      .<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(data => {
+        <span class="fn">setRates</span>(data)
+        <span class="kw">if</span> (data.length) <span class="fn">setSelected</span>(data[<span class="num">0</span>].id)   <span class="cmt">// первый по умолчанию</span>
+      })
+  }, [])
+
+  <span class="kw">const</span> delivery     = rates.<span class="fn">find</span>(r => r.id === selected)
+  <span class="kw">const</span> deliveryCost = delivery?.price ?? <span class="num">0</span>
+  <span class="kw">const</span> total        = (cart?.subtotal ?? <span class="num">0</span>) + deliveryCost
+
+  <span class="kw">const</span> submit = <span class="kw">async</span> () => {
+    <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/orders'</span>, {
+      method:  <span class="str">'POST'</span>,
+      headers: {
+        <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+        <span class="cls">Authorization</span>: <span class="str">`Bearer ${localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)}`</span>
+      },
+      body: <span class="cls">JSON</span>.<span class="fn">stringify</span>({ deliveryRateId: selected })
+    })
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;h2&gt;</span>Способ доставки<span class="tag">&lt;/h2&gt;</span>
+      {rates.<span class="fn">map</span>(rate => (
+        <span class="tag">&lt;label</span>
+          <span class="attr">key</span>={rate.id}
+          <span class="attr">style</span>={{
+            display: <span class="str">'flex'</span>, gap: <span class="num">12</span>, padding: <span class="num">14</span>, cursor: <span class="str">'pointer'</span>,
+            border: <span class="str">`2px solid ${selected === rate.id ? '#bc8cff' : '#30363d'}`</span>,
+            borderRadius: <span class="num">10</span>, marginBottom: <span class="num">8</span>
+          }}
+        <span class="tag">&gt;</span>
+          <span class="tag">&lt;input</span>
+            <span class="attr">type</span>=<span class="str">"radio"</span>
+            <span class="attr">checked</span>={selected === rate.id}
+            <span class="attr">onChange</span>={() => <span class="fn">setSelected</span>(rate.id)}
+          <span class="tag">/&gt;</span>
+          <span class="tag">&lt;span&gt;</span>
+            {rate.name} —{<span class="str">' '</span>}
+            <span class="tag">&lt;strong&gt;</span>
+              {rate.price === <span class="num">0</span> ? <span class="str">'Бесплатно'</span> : <span class="str">`${rate.price} ₽`</span>}
+            <span class="tag">&lt;/strong&gt;</span>
+          <span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/label&gt;</span>
+      ))}
+      <span class="tag">&lt;p&gt;</span>Итого с доставкой: <span class="tag">&lt;strong&gt;</span>{total} ₽<span class="tag">&lt;/strong&gt;</span><span class="tag">&lt;/p&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={submit}<span class="tag">&gt;</span>Оформить<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <p>В <code class="inline">routes/orders.ts</code> — добавь поле при создании заказа:</p>
+        <pre><code><span class="kw">const</span> order = <span class="kw">await</span> prisma.order.<span class="fn">create</span>({
+  data: {
+    userId:         req.userId!,
+    total,
+    deliveryRateId: deliveryRateId ?? <span class="kw">null</span>,  <span class="cmt">// добавить в Prisma-схему</span>
+    items:          { create: orderItems }
+  }
+})
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ЧАСТЬ 4 — История заказов
+  ════════════════════════════════════════ -->
+  <section>
+    <div class="section-label">Часть 4 — Order History</div>
+    <h2>📋 История заказов пользователя</h2>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>Backend — GET /api/orders/my</h4>
+        <div class="file-header"><span>backend/src/routes/orders.ts (добавить)</span></div>
+        <pre><code><span class="cmt">// Список всех заказов текущего пользователя</span>
+router.<span class="fn">get</span>(<span class="str">'/my'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> orders = <span class="kw">await</span> prisma.order.<span class="fn">findMany</span>({
+    where:   { userId: req.userId },
+    orderBy: { createdAt: <span class="str">'desc'</span> },
+    include: {
+      items: {
+        include: { product: { select: { name: <span class="kw">true</span>, price: <span class="kw">true</span> } } }
+      }
+    }
+  })
+  res.<span class="fn">json</span>(orders)
+})
+
+<span class="cmt">// Детали одного заказа</span>
+router.<span class="fn">get</span>(<span class="str">'/:id'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> order = <span class="kw">await</span> prisma.order.<span class="fn">findUnique</span>({
+    where:   { id: <span class="cls">Number</span>(req.params.id) },
+    include: { items: { include: { product: <span class="kw">true</span> } } }
+  })
+  <span class="cmt">// Защита: заказ должен принадлежать текущему пользователю</span>
+  <span class="kw">if</span> (!order || order.userId !== req.userId)
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ error: <span class="str">'Не найден'</span> })
+
+  res.<span class="fn">json</span>(order)
+})
+</code></pre>
+        <div class="warn">
+          <strong>IDOR-защита обязательна:</strong> всегда проверяй <code class="inline">order.userId !== req.userId</code>.
+          Иначе любой залогиненный пользователь сможет посмотреть чужие заказы по <code class="inline">id</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h4>React — OrderHistory.tsx</h4>
+        <div class="file-header"><span>frontend/src/pages/OrderHistory.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">OrderItem</span> { id: number; qty: number; product: { name: string; price: number } }
+<span class="kw">interface</span> <span class="cls">Order</span>     { id: number; total: number; createdAt: string; items: <span class="cls">OrderItem</span>[] }
+
+<span class="kw">const</span> STATUS_COLOR: <span class="cls">Record</span>&lt;string, string&gt; = {
+  pending:    <span class="str">'#f59e0b'</span>,
+  processing: <span class="str">'#3b82f6'</span>,
+  shipped:    <span class="str">'#8b5cf6'</span>,
+  delivered:  <span class="str">'#10b981'</span>,
+  cancelled:  <span class="str">'#ef4444'</span>,
+}
+
+<span class="kw">export function</span> <span class="fn">OrderHistory</span>() {
+  <span class="kw">const</span> [orders, setOrders] = <span class="fn">useState</span>&lt;<span class="cls">Order</span>[]&gt;([])
+  <span class="kw">const</span> [open,   setOpen]   = <span class="fn">useState</span>&lt;number | null&gt;(<span class="kw">null</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetch</span>(<span class="str">'/api/orders/my'</span>, {
+      headers: { <span class="cls">Authorization</span>: <span class="str">`Bearer ${localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)}`</span> }
+    }).<span class="fn">then</span>(r => r.<span class="fn">json</span>()).<span class="fn">then</span>(setOrders)
+  }, [])
+
+  <span class="kw">if</span> (!orders.length) <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>У вас ещё нет заказов<span class="tag">&lt;/p&gt;</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;h2&gt;</span>История заказов<span class="tag">&lt;/h2&gt;</span>
+      {orders.<span class="fn">map</span>(order => (
+        <span class="tag">&lt;div</span> <span class="attr">key</span>={order.id} <span class="attr">style</span>={{ marginBottom: <span class="num">12</span>, border: <span class="str">'1px solid #30363d'</span>, borderRadius: <span class="num">10</span> }}<span class="tag">&gt;</span>
+
+          {<span class="cmt">/* Заголовок строки */</span>}
+          <span class="tag">&lt;div</span>
+            <span class="attr">onClick</span>={() => <span class="fn">setOpen</span>(open === order.id ? <span class="kw">null</span> : order.id)}
+            <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, justifyContent: <span class="str">'space-between'</span>, padding: <span class="str">'14px 16px'</span>, cursor: <span class="str">'pointer'</span> }}
+          <span class="tag">&gt;</span>
+            <span class="tag">&lt;span&gt;</span>Заказ #{order.id} · {<span class="kw">new</span> <span class="cls">Date</span>(order.createdAt).<span class="fn">toLocaleDateString</span>(<span class="str">'ru'</span>)}<span class="tag">&lt;/span&gt;</span>
+            <span class="tag">&lt;span&gt;</span>{order.total} ₽ {open === order.id ? <span class="str">'▲'</span> : <span class="str">'▼'</span>}<span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;/div&gt;</span>
+
+          {<span class="cmt">/* Детали (accordion) */</span>}
+          {open === order.id &amp;&amp; (
+            <span class="tag">&lt;div</span> <span class="attr">style</span>={{ padding: <span class="str">'0 16px 16px'</span>, borderTop: <span class="str">'1px solid #30363d'</span> }}<span class="tag">&gt;</span>
+              {order.items.<span class="fn">map</span>(item => (
+                <span class="tag">&lt;div</span> <span class="attr">key</span>={item.id} <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, justifyContent: <span class="str">'space-between'</span>, padding: <span class="str">'6px 0'</span> }}<span class="tag">&gt;</span>
+                  <span class="tag">&lt;span&gt;</span>{item.product.name} × {item.qty}<span class="tag">&lt;/span&gt;</span>
+                  <span class="tag">&lt;span&gt;</span>{item.product.price * item.qty} ₽<span class="tag">&lt;/span&gt;</span>
+                <span class="tag">&lt;/div&gt;</span>
+              ))}
+            <span class="tag">&lt;/div&gt;</span>
+          )}
+        <span class="tag">&lt;/div&gt;</span>
+      ))}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <p>Добавь маршрут в <code class="inline">App.tsx</code>: <code class="inline">&lt;Route path="/orders" element={&lt;OrderHistory /&gt;} /&gt;</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ЧАСТЬ 5 — Skeleton Loader
+  ════════════════════════════════════════ -->
+  <section>
+    <div class="section-label">Часть 5 — UX: Skeleton Loader</div>
+    <h2>⏳ Скелетон-заглушки при загрузке</h2>
+
+    <div class="theory">
+      <strong>Skeleton loader</strong> — анимированная заглушка формы контента.
+      Лучше спиннера: пользователь видит <em>структуру</em> страницы до загрузки — нет «прыжка» вёрстки.
+    </div>
+
+    <p>Демо:</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="skeleton" style="height:120px;border-radius:10px 10px 0 0"></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton" style="height:14px;width:70%"></div>
+          <div class="skeleton" style="height:14px;width:45%"></div>
+          <div class="skeleton" style="height:32px;margin-top:4px"></div>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="skeleton" style="height:120px;border-radius:10px 10px 0 0"></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton" style="height:14px;width:80%"></div>
+          <div class="skeleton" style="height:14px;width:50%"></div>
+          <div class="skeleton" style="height:32px;margin-top:4px"></div>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="skeleton" style="height:120px;border-radius:10px 10px 0 0"></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton" style="height:14px;width:60%"></div>
+          <div class="skeleton" style="height:14px;width:40%"></div>
+          <div class="skeleton" style="height:32px;margin-top:4px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-body">
+        <h4>Компонент ProductCardSkeleton</h4>
+        <div class="file-header"><span>frontend/src/components/ProductCardSkeleton.tsx</span></div>
+        <pre><code><span class="kw">export function</span> <span class="fn">ProductCardSkeleton</span>() {
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">style</span>={{ border: <span class="str">'1px solid #30363d'</span>, borderRadius: <span class="num">10</span>, overflow: <span class="str">'hidden'</span> }}<span class="tag">&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"skeleton"</span> <span class="attr">style</span>={{ height: <span class="num">160</span> }} <span class="tag">/&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">style</span>={{ padding: <span class="num">16</span>, display: <span class="str">'flex'</span>, flexDirection: <span class="str">'column'</span>, gap: <span class="num">8</span> }}<span class="tag">&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"skeleton"</span> <span class="attr">style</span>={{ height: <span class="num">14</span>, width: <span class="str">'70%'</span> }} <span class="tag">/&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"skeleton"</span> <span class="attr">style</span>={{ height: <span class="num">14</span>, width: <span class="str">'45%'</span> }} <span class="tag">/&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"skeleton"</span> <span class="attr">style</span>={{ height: <span class="num">36</span>, marginTop: <span class="num">4</span> }} <span class="tag">/&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <p>CSS для скелетона (добавь в <code class="inline">index.css</code>):</p>
+        <pre><code><span class="cls">.skeleton</span> {
+  background: linear-gradient(
+    90deg,
+    <span class="fn">var</span>(--color-card)    <span class="num">25%</span>,
+    <span class="fn">var</span>(--color-border)  <span class="num">50%</span>,
+    <span class="fn">var</span>(--color-card)    <span class="num">75%</span>
+  );
+  background-size: <span class="num">200%</span> <span class="num">100%</span>;
+  animation: shimmer <span class="num">1.5s</span> infinite;
+  border-radius: <span class="num">6px</span>;
+}
+
+@keyframes shimmer {
+  <span class="num">0%</span>   { background-position: -<span class="num">200%</span> <span class="num">0</span>; }
+  <span class="num">100%</span> { background-position:  <span class="num">200%</span> <span class="num">0</span>; }
+}
+</code></pre>
+        <p>Использование в <code class="inline">ProductList.tsx</code>:</p>
+        <pre><code><span class="kw">if</span> (loading) <span class="kw">return</span> (
+  <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"grid"</span><span class="tag">&gt;</span>
+    {<span class="cls">Array</span>.<span class="fn">from</span>({ length: <span class="num">12</span> }).<span class="fn">map</span>((_, i) => (
+      <span class="tag">&lt;</span><span class="cls">ProductCardSkeleton</span> <span class="attr">key</span>={i} <span class="tag">/&gt;</span>
+    ))}
+  <span class="tag">&lt;/div&gt;</span>
+)
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ЧАСТЬ 6 — Toast уведомления
+  ════════════════════════════════════════ -->
+  <section>
+    <div class="section-label">Часть 6 — UX: Toast-уведомления</div>
+    <h2>🔔 Toast-уведомления (глобальный контекст)</h2>
+
+    <div class="theory">
+      <strong>Toast</strong> — всплывающее сообщение в углу экрана, исчезает через 3–4 секунды.
+      Правило: один <code class="inline">ToastContext</code> на всё приложение, <code class="inline">useToast()</code> хук доступен в любом компоненте.
+    </div>
+
+    <p>Демо:</p>
+    <div class="toast-demo">
+      <div class="toast success" id="toastDemo">✅ Товар добавлен в корзину</div>
+    </div>
+    <div style="display:flex;gap:8px;margin:8px 0 20px">
+      <button onclick="showToastDemo('success','✅ Товар добавлен!')" style="padding:8px 16px;background:var(--green);color:#fff;border:none;border-radius:8px;cursor:pointer">Успех</button>
+      <button onclick="showToastDemo('error','❌ Что-то пошло не так')"   style="padding:8px 16px;background:var(--red);color:#fff;border:none;border-radius:8px;cursor:pointer">Ошибка</button>
+    </div>
+
+    <div class="step">
+      <div class="step-num">10</div>
+      <div class="step-body">
+        <h4>ToastContext + useToast хук</h4>
+        <div class="file-header"><span>frontend/src/context/ToastContext.tsx</span></div>
+        <pre><code><span class="kw">import</span> { createContext, useContext, useState, useCallback } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Toast</span> { id: number; message: string; type: <span class="str">'success'</span> | <span class="str">'error'</span> | <span class="str">'info'</span> }
+
+<span class="kw">interface</span> <span class="cls">ToastCtx</span> {
+  <span class="fn">toast</span>: (message: string, type?: Toast[<span class="str">'type'</span>]) => <span class="kw">void</span>
+}
+
+<span class="kw">const</span> <span class="cls">ToastContext</span> = <span class="fn">createContext</span>&lt;<span class="cls">ToastCtx</span>&gt;({} <span class="kw">as</span> <span class="cls">ToastCtx</span>)
+
+<span class="kw">export function</span> <span class="fn">ToastProvider</span>({ children }: { children: React.<span class="cls">ReactNode</span> }) {
+  <span class="kw">const</span> [toasts, setToasts] = <span class="fn">useState</span>&lt;<span class="cls">Toast</span>[]&gt;([])
+
+  <span class="kw">const</span> toast = <span class="fn">useCallback</span>((message: string, type: Toast[<span class="str">'type'</span>] = <span class="str">'info'</span>) => {
+    <span class="kw">const</span> id = <span class="cls">Date</span>.<span class="fn">now</span>()
+    <span class="fn">setToasts</span>(prev => [...prev, { id, message, type }])
+    <span class="fn">setTimeout</span>(() => {
+      <span class="fn">setToasts</span>(prev => prev.<span class="fn">filter</span>(t => t.id !== id))
+    }, <span class="num">3500</span>)
+  }, [])
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;</span><span class="cls">ToastContext</span>.<span class="cls">Provider</span> <span class="attr">value</span>={{ toast }}<span class="tag">&gt;</span>
+      {children}
+
+      {<span class="cmt">/* Контейнер тостов */</span>}
+      <span class="tag">&lt;div</span> <span class="attr">style</span>={{ position: <span class="str">'fixed'</span>, bottom: <span class="num">20</span>, right: <span class="num">20</span>, zIndex: <span class="num">9999</span>, display: <span class="str">'flex'</span>, flexDirection: <span class="str">'column'</span>, gap: <span class="num">8</span> }}<span class="tag">&gt;</span>
+        {toasts.<span class="fn">map</span>(t => (
+          <span class="tag">&lt;div</span> <span class="attr">key</span>={t.id} <span class="attr">style</span>={{
+            background:   <span class="str">'#161b22'</span>,
+            border:       <span class="str">`1px solid #30363d`</span>,
+            borderLeft:   <span class="str">`3px solid ${t.type === 'success' ? '#3fb950' : t.type === 'error' ? '#f85149' : '#58a6ff'}`</span>,
+            borderRadius: <span class="num">10</span>,
+            padding:      <span class="str">'12px 20px'</span>,
+            fontSize:     <span class="num">14</span>,
+            boxShadow:    <span class="str">'0 4px 20px rgba(0,0,0,.5)'</span>,
+            animation:    <span class="str">'fadeInRight .3s ease'</span>
+          }}<span class="tag">&gt;</span>
+            {t.message}
+          <span class="tag">&lt;/div&gt;</span>
+        ))}
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/</span><span class="cls">ToastContext</span>.<span class="cls">Provider</span><span class="tag">&gt;</span>
+  )
+}
+
+<span class="kw">export const</span> <span class="fn">useToast</span> = () => <span class="fn">useContext</span>(<span class="cls">ToastContext</span>)
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">11</div>
+      <div class="step-body">
+        <h4>Подключение в App.tsx</h4>
+        <pre><code><span class="cmt">// Обернуть всё приложение:</span>
+<span class="tag">&lt;</span><span class="cls">ToastProvider</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;</span><span class="cls">AuthProvider</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;</span><span class="cls">Routes</span><span class="tag">&gt;</span>
+      ...
+    <span class="tag">&lt;/</span><span class="cls">Routes</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;/</span><span class="cls">AuthProvider</span><span class="tag">&gt;</span>
+<span class="tag">&lt;/</span><span class="cls">ToastProvider</span><span class="tag">&gt;</span>
+</code></pre>
+        <p>Использование в любом компоненте:</p>
+        <pre><code><span class="kw">import</span> { <span class="fn">useToast</span> } <span class="kw">from</span> <span class="str">'../context/ToastContext'</span>
+
+<span class="kw">function</span> <span class="fn">AddToCartButton</span>({ productId }: { productId: number }) {
+  <span class="kw">const</span> { toast } = <span class="fn">useToast</span>()
+
+  <span class="kw">const</span> add = <span class="kw">async</span> () => {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/cart'</span>, {
+      method: <span class="str">'POST'</span>,
+      headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>, <span class="cls">Authorization</span>: <span class="str">`Bearer ${localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)}`</span> },
+      body: <span class="cls">JSON</span>.<span class="fn">stringify</span>({ productId })
+    })
+    <span class="kw">if</span> (res.ok) <span class="fn">toast</span>(<span class="str">'✅ Товар добавлен в корзину'</span>, <span class="str">'success'</span>)
+    <span class="kw">else</span>        <span class="fn">toast</span>(<span class="str">'❌ Ошибка. Попробуйте снова'</span>,  <span class="str">'error'</span>)
+  }
+
+  <span class="kw">return</span> <span class="tag">&lt;button</span> <span class="attr">onClick</span>={add}<span class="tag">&gt;</span>В корзину<span class="tag">&lt;/button&gt;</span>
+}
+</code></pre>
+        <div class="tip">
+          <strong>Замени все</strong> <code class="inline">alert()</code> и <code class="inline">console.log()</code> на <code class="inline">toast()</code>. Это главный UX-апгрейд, заметный сразу.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ЗАДАНИЯ
+  ════════════════════════════════════════ -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>
+          <strong>PasswordStrength</strong><br>
+          Добавь компонент <code class="inline">PasswordStrength</code> в форму регистрации.
+          Кнопка «Зарегистрироваться» должна быть <code class="inline">disabled</code>, пока уровень ниже «Хороший» (strength &lt; 2).
+        </li>
+        <li>
+          <strong>Мини-корзина</strong><br>
+          Замени счётчик в шапке на полноценный <code class="inline">MiniCart</code> dropdown.
+          При клике за пределами — закрывается (хук <code class="inline">useClickOutside</code>).
+        </li>
+        <li>
+          <strong>Выбор доставки</strong><br>
+          Заполни таблицу <code class="inline">DeliveryRate</code> через seed-скрипт (3+ варианта).
+          На странице оформления заказа — радио-выбор; итоговая сумма пересчитывается автоматически.
+        </li>
+        <li>
+          <strong>История заказов</strong><br>
+          Страница <code class="inline">/orders</code> — список всех заказов пользователя.
+          Клик на заказ — accordion с составом. Убедись, что чужие заказы недоступны (проверить в DevTools → Network).
+        </li>
+        <li>
+          <strong>⭐ Skeleton Loader</strong><br>
+          В <code class="inline">ProductList</code> и <code class="inline">OrderHistory</code>: пока данные грузятся — скелетон. После загрузки — плавное появление контента.
+        </li>
+        <li>
+          <strong>⭐ Toast-уведомления</strong><br>
+          Подключи <code class="inline">ToastProvider</code> в <code class="inline">App.tsx</code>. Замени все <code class="inline">alert()</code> на <code class="inline">toast()</code>.
+          Добавь тост при: успешном добавлении в корзину, ошибке авторизации, оформлении заказа.
+        </li>
+        <li>
+          <strong>⭐⭐ Объединить всё</strong><br>
+          При оформлении заказа: выбор доставки → <code class="inline">POST /api/orders</code> →
+          тост «Заказ оформлен!» → редирект на <code class="inline">/orders</code> (история).
+          На странице заказа показать скелетон до загрузки.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="bottom-nav">
+    <a href="lab_11.html" class="btn-nav">← Лаб. №11</a>
+    <div class="progress-bar">
+      Лаб. работа 12 из 13
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_13.html" class="btn-nav primary">Лаб. №13 →</a>
+  </div>
+
+</main>
+
+<script>
+  /* Theme */
+  const btn = document.getElementById('themeBtn')
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light')
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая'
+    localStorage.setItem('labTheme', t)
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light')
+  applyTheme(localStorage.getItem('labTheme') || 'dark')
+
+  /* Password strength demo */
+  const COLORS = ['#f85149','#f59e0b','#3b82f6','#10b981']
+  const LABELS = ['Слабый','Средний','Хороший','Сильный']
+  function getStrength(p) {
+    if (p.length < 6)  return 0
+    if (p.length < 10) return 1
+    const hasUpper = /[A-Z]/.test(p), hasDigit = /[0-9]/.test(p), hasSpec = /[^a-zA-Z0-9]/.test(p)
+    if (hasUpper && hasDigit && hasSpec) return 3
+    if (hasUpper && hasDigit)            return 2
+    return 1
+  }
+  function updateStrength(p) {
+    if (!p) { [0,1,2,3].forEach(i => document.getElementById('bar'+i).style.background='var(--border)'); document.getElementById('strengthLabel').textContent=''; return }
+    const s = getStrength(p)
+    ;[0,1,2,3].forEach(i => document.getElementById('bar'+i).style.background = i<=s ? COLORS[s] : 'var(--border)')
+    document.getElementById('strengthLabel').textContent = LABELS[s]
+    document.getElementById('strengthLabel').style.color = COLORS[s]
+  }
+
+  /* Delivery demo */
+  function selectDelivery(el) {
+    document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('selected'))
+    el.classList.add('selected')
+  }
+
+  /* Toast demo */
+  function showToastDemo(type, msg) {
+    const t = document.getElementById('toastDemo')
+    t.className = 'toast ' + type
+    t.textContent = msg
+    t.style.opacity = '1'
+    clearTimeout(t._timer)
+    t._timer = setTimeout(() => t.style.opacity = '0', 2500)
+  }
+</script>
+
+</body>
+</html>

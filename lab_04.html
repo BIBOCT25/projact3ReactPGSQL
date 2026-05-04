@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №4 — Корзина</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0d2137 0%, #0a3d62 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #b8d8f8 100%); }
+  .lab-badge { display: inline-block; background: rgba(88,166,255,.15); border: 1px solid rgba(88,166,255,.4); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  p { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .important { background: rgba(248,81,73,.07); border-left: 3px solid var(--red); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .tip { background: rgba(63,185,80,.07); border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(210,153,34,.07); border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .tag { color: #7ee787; } .attr { color: #ffa657; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  .file-header { display: flex; align-items: center; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--accent); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  /* Макет корзины */
+  .mock-cart { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .mock-cart-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 14px; }
+  .mock-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .mock-item:last-of-type { border-bottom: none; }
+  .mock-item-img { width: 48px; height: 48px; background: rgba(88,166,255,.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .mock-item-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .mock-qty { display: flex; align-items: center; gap: 8px; }
+  .mock-qty button { width: 26px; height: 26px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: default; font-size: 14px; }
+  .mock-qty span { font-size: 14px; font-weight: 600; width: 24px; text-align: center; }
+  .mock-item-price { font-size: 15px; font-weight: 700; color: var(--accent); min-width: 80px; text-align: right; }
+  .mock-trash { color: var(--red); cursor: default; font-size: 16px; }
+  .mock-total { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; margin-top: 4px; border-top: 2px solid var(--border); }
+  .mock-total-label { font-size: 14px; color: var(--text-muted); }
+  .mock-total-sum { font-size: 20px; font-weight: 700; color: var(--accent); }
+  /* Полоса доставки */
+  .delivery-bar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; }
+  .delivery-bar p { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+  .delivery-bar p strong { color: var(--text); }
+  .bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; transition: width .5s; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 6px 0; color: var(--text); font-size: 14.5px; }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--accent); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">Лабораторная работа</div>
+  <h1>№4 — Корзина</h1>
+  <p>Хук useCart, пересчёт суммы, изменение количества, полоса до бесплатной доставки</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html" class="active">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ЦЕЛЬ ── -->
+  <section>
+    <div class="section-label">Цель работы</div>
+    <h2>🎯 Что мы сделаем</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--green)">✅ В итоге получим</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li>Страницу корзины с позициями</li>
+          <li>Кнопки +/− для изменения количества</li>
+          <li>Сумма пересчитывается мгновенно</li>
+          <li>Полоса «ещё N ₽ до бесплатной доставки»</li>
+          <li>Удаление позиции из корзины</li>
+          <li>Кастомный хук <code class="inline">useCart</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--accent)">🔑 Новые понятия</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li><strong>Custom Hook</strong> — свой хук, выносим логику из компонента</li>
+          <li><strong>Optimistic UI</strong> — обновляем экран сразу, не ждём сервер</li>
+          <li><strong>PATCH</strong> — HTTP-метод для частичного обновления</li>
+          <li><strong>reduce()</strong> — подсчёт суммы массива</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Макет корзины -->
+    <div class="mock-cart">
+      <div class="mock-cart-title">Так будет выглядеть корзина</div>
+      <div class="mock-item">
+        <div class="mock-item-img">👟</div>
+        <span class="mock-item-name">Кроссовки Nike</span>
+        <div class="mock-qty">
+          <button>−</button>
+          <span>2</span>
+          <button>+</button>
+        </div>
+        <span class="mock-item-price">9 980 ₽</span>
+        <span class="mock-trash">🗑</span>
+      </div>
+      <div class="mock-item">
+        <div class="mock-item-img">👕</div>
+        <span class="mock-item-name">Футболка Adidas</span>
+        <div class="mock-qty">
+          <button>−</button>
+          <span>1</span>
+          <button>+</button>
+        </div>
+        <span class="mock-item-price">1 290 ₽</span>
+        <span class="mock-trash">🗑</span>
+      </div>
+      <div class="mock-total">
+        <span class="mock-total-label">Итого</span>
+        <span class="mock-total-sum">11 270 ₽</span>
+      </div>
+    </div>
+
+    <div class="delivery-bar">
+      <p>Ещё <strong>730 ₽</strong> до бесплатной доставки</p>
+      <div class="bar-track"><div class="bar-fill" style="width:94%"></div></div>
+    </div>
+  </section>
+
+  <!-- ── ТЕОРИЯ: CUSTOM HOOK ── -->
+  <section>
+    <div class="section-label">Теория</div>
+    <h2>🪝 Кастомный хук — зачем выносить логику</h2>
+
+    <div class="theory">
+      <strong>Кастомный хук</strong> — это обычная функция, которая:
+      <ul style="padding-left:18px;margin-top:8px">
+        <li>начинается с <code class="inline">use</code></li>
+        <li>использует другие хуки (useState, useEffect, ...)</li>
+        <li>возвращает данные и функции для компонента</li>
+      </ul>
+      <br>Это способ вынести логику из компонента и переиспользовать её в нескольких местах.
+    </div>
+
+    <div class="card">
+      <table>
+        <tr><th>Без хука</th><th>С хуком useCart</th></tr>
+        <tr>
+          <td style="color:var(--text-muted);font-size:13px">Весь useState, useEffect, fetch — прямо в компоненте корзины. 100+ строк логики внутри JSX.</td>
+          <td style="color:var(--text-muted);font-size:13px">Компонент вызывает <code class="inline">const { cart, updateQty, removeItem } = useCart()</code> и занимается только отображением.</td>
+        </tr>
+      </table>
+    </div>
+
+    <h3>Пример простого кастомного хука</h3>
+    <pre><code><span class="cmt">// Хук — просто функция с use-prefix</span>
+<span class="kw">function</span> <span class="fn">useCounter</span>(initial = <span class="num">0</span>) {
+  <span class="kw">const</span> [count, setCount] = <span class="fn">useState</span>(initial)
+  <span class="kw">const</span> increment = () =&gt; <span class="fn">setCount</span>(c =&gt; c + <span class="num">1</span>)
+  <span class="kw">const</span> decrement = () =&gt; <span class="fn">setCount</span>(c =&gt; c - <span class="num">1</span>)
+  <span class="kw">const</span> reset     = () =&gt; <span class="fn">setCount</span>(initial)
+  <span class="kw">return</span> { count, increment, decrement, reset }
+}
+
+<span class="cmt">// Использование в компоненте:</span>
+<span class="kw">function</span> <span class="fn">Counter</span>() {
+  <span class="kw">const</span> { count, increment, decrement } = <span class="fn">useCounter</span>(<span class="num">0</span>)
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={decrement}<span class="tag">&gt;</span>−<span class="tag">&lt;/button&gt;</span>
+      {count}
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={increment}<span class="tag">&gt;</span>+<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+  </section>
+
+  <!-- ── ШАГ 1: API КОРЗИНЫ ── -->
+  <section>
+    <div class="section-label">Шаг 1</div>
+    <h2>🌐 API-функции для корзины</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Создать файл api/cart.ts</h4>
+        <div class="file-header"><span>frontend/src/api/cart.ts</span></div>
+        <pre><code><span class="cmt">// Тип одной позиции корзины (приходит с сервера)</span>
+<span class="kw">export interface</span> <span class="cls">CartItem</span> {
+  id:        number
+  qty:       number
+  productId: number
+  userId:    number
+  product: {            <span class="cmt">// вложенный объект из JOIN</span>
+    id:    number
+    name:  string
+    price: number
+  }
+}
+
+<span class="cmt">// Ответ GET /api/cart</span>
+<span class="kw">export interface</span> <span class="cls">CartResponse</span> {
+  items:     <span class="cls">CartItem</span>[]
+  total:     number
+  remaining: number     <span class="cmt">// сколько ₽ до бесплатной доставки</span>
+}
+
+<span class="cmt">// Получить корзину</span>
+<span class="kw">export async function</span> <span class="fn">fetchCart</span>(): <span class="cls">Promise</span>&lt;<span class="cls">CartResponse</span>&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/cart'</span>)
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">'Ошибка загрузки корзины'</span>)
+  <span class="kw">return</span> res.<span class="fn">json</span>()
+}
+
+<span class="cmt">// Изменить количество (PATCH /api/cart/:id)</span>
+<span class="kw">export async function</span> <span class="fn">updateCartItem</span>(id: number, qty: number): <span class="cls">Promise</span>&lt;<span class="kw">void</span>&gt; {
+  <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/cart/${id}`</span>, {
+    method:  <span class="str">'PATCH'</span>,
+    headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+    body:    JSON.<span class="fn">stringify</span>({ qty })
+  })
+}
+
+<span class="cmt">// Удалить позицию (DELETE /api/cart/:id)</span>
+<span class="kw">export async function</span> <span class="fn">removeCartItem</span>(id: number): <span class="cls">Promise</span>&lt;<span class="kw">void</span>&gt; {
+  <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/cart/${id}`</span>, { method: <span class="str">'DELETE'</span> })
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 2: ХУК ── -->
+  <section>
+    <div class="section-label">Шаг 2</div>
+    <h2>🪝 Хук useCart</h2>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Создать хук hooks/useCart.ts</h4>
+        <p>Хук инкапсулирует всю логику: загрузку, обновление, удаление и оптимистичное обновление экрана.</p>
+        <div class="file-header"><span>frontend/src/hooks/useCart.ts</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect, useCallback } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="cls">CartResponse</span>, <span class="fn">fetchCart</span>, <span class="fn">updateCartItem</span>, <span class="fn">removeCartItem</span> } <span class="kw">from</span> <span class="str">'../api/cart'</span>
+
+<span class="kw">export function</span> <span class="fn">useCart</span>() {
+  <span class="kw">const</span> [cart,    setCart]    = <span class="fn">useState</span>&lt;<span class="cls">CartResponse</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>)
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>)
+
+  <span class="cmt">// useCallback — мемоизация функции, чтобы не создавать заново при каждом рендере</span>
+  <span class="kw">const</span> reload = <span class="fn">useCallback</span>(<span class="kw">async</span> () =&gt; {
+    <span class="kw">try</span> {
+      <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchCart</span>()
+      <span class="fn">setCart</span>(data)
+    } <span class="kw">finally</span> {
+      <span class="fn">setLoading</span>(<span class="kw">false</span>)
+    }
+  }, [])
+
+  <span class="cmt">// Загрузить корзину при монтировании</span>
+  <span class="fn">useEffect</span>(() =&gt; { <span class="fn">reload</span>() }, [reload])
+
+  <span class="cmt">// Изменить количество — оптимистично</span>
+  <span class="kw">const</span> updateQty = <span class="kw">async</span> (itemId: number, newQty: number) =&gt; {
+    <span class="kw">if</span> (newQty &lt; <span class="num">1</span>) { <span class="kw">return</span> <span class="fn">removeItem</span>(itemId) } <span class="cmt">// qty &lt; 1 → удалить</span>
+
+    <span class="cmt">// Optimistic update: сразу меняем UI, не ждём сервер</span>
+    <span class="fn">setCart</span>(prev =&gt; {
+      <span class="kw">if</span> (!prev) <span class="kw">return</span> prev
+      <span class="kw">const</span> items = prev.items.<span class="fn">map</span>(i =&gt;
+        i.id === itemId ? { ...i, qty: newQty } : i  <span class="cmt">// обновляем нужный элемент</span>
+      )
+      <span class="kw">const</span> total = <span class="fn">calcTotal</span>(items)           <span class="cmt">// пересчитываем сумму</span>
+      <span class="kw">return</span> { ...prev, items, total, remaining: <span class="fn">calcRemaining</span>(total) }
+    })
+
+    <span class="kw">await</span> <span class="fn">updateCartItem</span>(itemId, newQty)  <span class="cmt">// отправляем на сервер в фоне</span>
+  }
+
+  <span class="cmt">// Удалить позицию</span>
+  <span class="kw">const</span> removeItem = <span class="kw">async</span> (itemId: number) =&gt; {
+    <span class="cmt">// Сразу убираем из UI</span>
+    <span class="fn">setCart</span>(prev =&gt; {
+      <span class="kw">if</span> (!prev) <span class="kw">return</span> prev
+      <span class="kw">const</span> items = prev.items.<span class="fn">filter</span>(i =&gt; i.id !== itemId) <span class="cmt">// filter = убрать элемент</span>
+      <span class="kw">const</span> total = <span class="fn">calcTotal</span>(items)
+      <span class="kw">return</span> { ...prev, items, total, remaining: <span class="fn">calcRemaining</span>(total) }
+    })
+    <span class="kw">await</span> <span class="fn">removeCartItem</span>(itemId)
+  }
+
+  <span class="kw">return</span> { cart, loading, updateQty, removeItem, reload }
+}
+
+<span class="cmt">// Вспомогательные функции — считаем локально чтобы не ждать сервер</span>
+<span class="kw">const</span> FREE_DELIVERY = <span class="num">3000</span>  <span class="cmt">// порог бесплатной доставки в ₽</span>
+
+<span class="kw">function</span> <span class="fn">calcTotal</span>(items: <span class="kw">any</span>[]) {
+  <span class="kw">return</span> items.<span class="fn">reduce</span>((sum, i) =&gt; sum + i.product.price * i.qty, <span class="num">0</span>)
+  <span class="cmt">// reduce: начать с 0, для каждого элемента добавить цена × количество</span>
+}
+
+<span class="kw">function</span> <span class="fn">calcRemaining</span>(total: number) {
+  <span class="kw">return</span> <span class="cls">Math</span>.<span class="fn">max</span>(<span class="num">0</span>, FREE_DELIVERY - total)
+  <span class="cmt">// не может быть отрицательным — Math.max(0, ...)</span>
+}
+</code></pre>
+
+        <div class="tip">
+          <strong>💡 Optimistic Update</strong> — «оптимистичное обновление».<br>
+          Мы <em>сразу</em> меняем UI как будто сервер уже ответил.
+          Пользователь видит мгновенный отклик. Если сервер вернёт ошибку — откатим изменение.
+          Так работают все крупные приложения: Twitter, Telegram, Notion.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 3: КОМПОНЕНТ КОРЗИНЫ ── -->
+  <section>
+    <div class="section-label">Шаг 3</div>
+    <h2>🛒 Компонент страницы корзины</h2>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Создать CartPage.tsx</h4>
+        <div class="file-header"><span>frontend/src/pages/CartPage.tsx</span></div>
+        <pre><code><span class="kw">import</span> { <span class="fn">useCart</span> } <span class="kw">from</span> <span class="str">'../hooks/useCart'</span>
+
+<span class="kw">export function</span> <span class="fn">CartPage</span>() {
+  <span class="kw">const</span> { cart, loading, updateQty, removeItem } = <span class="fn">useCart</span>()
+  <span class="cmt">// Весь useState и fetch — внутри хука. Здесь только отображение.</span>
+
+  <span class="kw">if</span> (loading) <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Загрузка корзины…<span class="tag">&lt;/p&gt;</span>
+  <span class="kw">if</span> (!cart || cart.items.length === <span class="num">0</span>) <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Корзина пуста<span class="tag">&lt;/p&gt;</span>
+
+  <span class="kw">const</span> fmt = (n: number) =&gt; n.<span class="fn">toLocaleString</span>(<span class="str">'ru-RU'</span>) + <span class="str">' ₽'</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"cart-page"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;h1&gt;</span>Корзина<span class="tag">&lt;/h1&gt;</span>
+
+      <span class="cmt">{'/* Полоса бесплатной доставки */'}</span>
+      <span class="tag">&lt;FreeDeliveryBar</span> <span class="attr">remaining</span>={cart.remaining} <span class="attr">threshold</span>={<span class="num">3000</span>} <span class="tag">/&gt;</span>
+
+      <span class="cmt">{'/* Список позиций */'}</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"cart-items"</span><span class="tag">&gt;</span>
+        {cart.items.<span class="fn">map</span>(item =&gt; (
+          <span class="tag">&lt;div</span> <span class="attr">key</span>={item.id} <span class="attr">className</span>=<span class="str">"cart-item"</span><span class="tag">&gt;</span>
+
+            <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"item-name"</span><span class="tag">&gt;</span>{item.product.name}<span class="tag">&lt;/div&gt;</span>
+
+            <span class="cmt">{'/* Кнопки +/− */'}</span>
+            <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"qty-control"</span><span class="tag">&gt;</span>
+              <span class="tag">&lt;button</span> <span class="attr">onClick</span>={() =&gt; <span class="fn">updateQty</span>(item.id, item.qty - <span class="num">1</span>)}<span class="tag">&gt;</span>−<span class="tag">&lt;/button&gt;</span>
+              <span class="tag">&lt;span&gt;</span>{item.qty}<span class="tag">&lt;/span&gt;</span>
+              <span class="tag">&lt;button</span> <span class="attr">onClick</span>={() =&gt; <span class="fn">updateQty</span>(item.id, item.qty + <span class="num">1</span>)}<span class="tag">&gt;</span>+<span class="tag">&lt;/button&gt;</span>
+            <span class="tag">&lt;/div&gt;</span>
+
+            <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"item-price"</span><span class="tag">&gt;</span>
+              {<span class="fn">fmt</span>(item.product.price * item.qty)}
+            <span class="tag">&lt;/span&gt;</span>
+
+            <span class="tag">&lt;button</span>
+              <span class="attr">className</span>=<span class="str">"btn-remove"</span>
+              <span class="attr">onClick</span>={() =&gt; <span class="fn">removeItem</span>(item.id)}
+            <span class="tag">&gt;</span>🗑<span class="tag">&lt;/button&gt;</span>
+
+          <span class="tag">&lt;/div&gt;</span>
+        ))}
+      <span class="tag">&lt;/div&gt;</span>
+
+      <span class="cmt">{'/* Итоговая сумма */'}</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"cart-total"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;span&gt;</span>Итого:<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;strong&gt;</span>{<span class="fn">fmt</span>(cart.total)}<span class="tag">&lt;/strong&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+
+      <span class="tag">&lt;button</span> <span class="attr">className</span>=<span class="str">"btn-checkout"</span><span class="tag">&gt;</span>Оформить заказ<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 4: КОМПОНЕНТ ПОЛОСЫ ── -->
+  <section>
+    <div class="section-label">Шаг 4</div>
+    <h2>📊 Компонент «До бесплатной доставки»</h2>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Создать FreeDeliveryBar.tsx</h4>
+        <p>Компонент отображает прогресс-бар и текст. Получает только два числа — больше ничего не знает о корзине.</p>
+        <div class="file-header"><span>frontend/src/components/FreeDeliveryBar.tsx</span></div>
+        <pre><code><span class="kw">interface</span> <span class="cls">Props</span> {
+  remaining: number   <span class="cmt">// сколько ₽ осталось</span>
+  threshold: number   <span class="cmt">// порог бесплатной доставки (3000)</span>
+}
+
+<span class="kw">export function</span> <span class="fn">FreeDeliveryBar</span>({ remaining, threshold }: <span class="cls">Props</span>) {
+  <span class="cmt">// Если remaining = 0 — доставка бесплатна</span>
+  <span class="kw">if</span> (remaining === <span class="num">0</span>) {
+    <span class="kw">return</span> (
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"delivery-bar delivery-free"</span><span class="tag">&gt;</span>
+        🎉 Бесплатная доставка!
+      <span class="tag">&lt;/div&gt;</span>
+    )
+  }
+
+  <span class="cmt">// Процент заполнения полосы</span>
+  <span class="kw">const</span> filled = remaining === <span class="num">0</span>
+    ? <span class="num">100</span>
+    : ((<span class="num">1</span> - remaining / threshold) * <span class="num">100</span>).<span class="fn">toFixed</span>(<span class="num">1</span>)
+  <span class="cmt">// Пример: remaining=750, threshold=3000 → (1 - 750/3000)*100 = 75%</span>
+
+  <span class="kw">const</span> fmt = (n: number) =&gt; n.<span class="fn">toLocaleString</span>(<span class="str">'ru-RU'</span>)
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"delivery-bar"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;p&gt;</span>
+        Ещё <span class="tag">&lt;strong&gt;</span>{<span class="fn">fmt</span>(remaining)} ₽<span class="tag">&lt;/strong&gt;</span> до бесплатной доставки
+      <span class="tag">&lt;/p&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"bar-track"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;div</span>
+          <span class="attr">className</span>=<span class="str">"bar-fill"</span>
+          <span class="attr">style</span>={{ width: <span class="str">`${filled}%`</span> }}  <span class="cmt">// ширина = % заполнения</span>
+        <span class="tag">/&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 5: МАРШРУТЫ ── -->
+  <section>
+    <div class="section-label">Шаг 5</div>
+    <h2>🗺️ Навигация между страницами (React Router)</h2>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Установить React Router и настроить маршруты</h4>
+        <pre><code>npm install react-router-dom
+</code></pre>
+        <div class="file-header"><span>frontend/src/App.tsx</span></div>
+        <pre><code><span class="kw">import</span> { BrowserRouter, Routes, Route, Link } <span class="kw">from</span> <span class="str">'react-router-dom'</span>
+<span class="kw">import</span> { <span class="cls">CatalogPage</span> } <span class="kw">from</span> <span class="str">'./pages/CatalogPage'</span>
+<span class="kw">import</span> { <span class="cls">CartPage</span> }    <span class="kw">from</span> <span class="str">'./pages/CartPage'</span>
+<span class="kw">import</span> <span class="str">'./index.css'</span>
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    <span class="tag">&lt;BrowserRouter&gt;</span>               <span class="cmt">// оборачиваем всё приложение</span>
+      <span class="tag">&lt;nav</span> <span class="attr">className</span>=<span class="str">"app-nav"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;Link</span> <span class="attr">to</span>=<span class="str">"/"</span><span class="tag">&gt;</span>Каталог<span class="tag">&lt;/Link&gt;</span>   <span class="cmt">// Link — вместо &lt;a&gt;, без перезагрузки страницы</span>
+        <span class="tag">&lt;Link</span> <span class="attr">to</span>=<span class="str">"/cart"</span><span class="tag">&gt;</span>🛒 Корзина<span class="tag">&lt;/Link&gt;</span>
+      <span class="tag">&lt;/nav&gt;</span>
+
+      <span class="tag">&lt;Routes&gt;</span>
+        <span class="tag">&lt;Route</span> <span class="attr">path</span>=<span class="str">"/"</span>      <span class="attr">element</span>={<span class="tag">&lt;CatalogPage /&gt;</span>} <span class="tag">/&gt;</span>
+        <span class="tag">&lt;Route</span> <span class="attr">path</span>=<span class="str">"/cart"</span> <span class="attr">element</span>={<span class="tag">&lt;CartPage /&gt;</span>}    <span class="tag">/&gt;</span>
+      <span class="tag">&lt;/Routes&gt;</span>
+    <span class="tag">&lt;/BrowserRouter&gt;</span>
+  )
+}
+
+<span class="kw">export default</span> App
+</code></pre>
+        <div class="tip">
+          <strong>💡 Link vs &lt;a&gt;</strong><br>
+          Обычный тег <code class="inline">&lt;a href="/cart"&gt;</code> перезагружает страницу — React-состояние теряется.
+          <code class="inline">&lt;Link to="/cart"&gt;</code> меняет URL без перезагрузки — приложение остаётся «живым».
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ИТОГ ── -->
+  <section>
+    <div class="section-label">Итог</div>
+    <h2>📋 Итоговая структура</h2>
+    <pre><code>frontend/src/
+├── api/
+│   ├── products.ts       <span class="cmt">← fetchProducts, addToCart</span>
+│   └── cart.ts           <span class="cmt">← fetchCart, updateCartItem, removeCartItem</span>
+├── hooks/
+│   └── useCart.ts        <span class="cmt">← хук с логикой корзины (optimistic update)</span>
+├── components/
+│   ├── ProductCard.tsx
+│   └── FreeDeliveryBar.tsx  <span class="cmt">← прогресс-бар доставки</span>
+├── pages/
+│   ├── CatalogPage.tsx
+│   └── CartPage.tsx      <span class="cmt">← страница корзины</span>
+├── App.tsx               <span class="cmt">← BrowserRouter + Routes</span>
+└── index.css
+</code></pre>
+
+    <div class="warn">
+      <strong>🔁 Итог: поток данных корзины</strong><br>
+      <code class="inline">CartPage</code> вызывает <code class="inline">useCart()</code> →
+      хук держит <code class="inline">cart</code> в useState →
+      при <code class="inline">updateQty(id, qty)</code> → сначала меняем <code class="inline">setCart</code> (мгновенно),
+      потом <code class="inline">PATCH /api/cart/:id</code> (в фоне) →
+      экран не «мигает», пользователь не ждёт.
+    </div>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>Создайте все файлы из шагов 1–5. Убедитесь что товары из лаб. №3 добавляются в корзину и отображаются на странице <code class="inline">/cart</code>.</li>
+        <li>Нажмите «+» несколько раз — сумма должна пересчитываться мгновенно, без задержки.</li>
+        <li>Нажмите «−» когда qty=1 — позиция должна исчезнуть из корзины (удаление при qty &lt; 1).</li>
+        <li>Добавьте товаров на сумму больше 3000 ₽ — полоса доставки должна стать зелёной с текстом «🎉 Бесплатная доставка!».</li>
+        <li class="star">⭐ Добавьте кнопку «Очистить корзину» — удаляет все позиции за один запрос. Нужно добавить роут <code class="inline">DELETE /api/cart</code> на бэкенде.</li>
+        <li class="star">⭐ Добавьте анимацию при удалении позиции: при нажатии 🗑 элемент плавно исчезает (CSS transition + opacity).</li>
+        <li class="star">⭐⭐ Что будет если сервер вернёт ошибку при <code class="inline">updateCartItem</code>? Как реализовать откат (rollback) оптимистичного обновления?</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_03.html" class="btn-nav">← Лаб. №3</a>
+    <div class="progress-bar">
+      Лаб. работа 4 из 8
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_05.html" class="btn-nav primary">Лаб. №5 →</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>

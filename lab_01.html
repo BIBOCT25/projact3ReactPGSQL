@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №1 — Стек и архитектура</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --card: #1c2230;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #ffa657;
+    --code-bg: #0d1117;
+  }
+  body.light {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --card: #f0f6fc;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text-muted: #636c76;
+    --accent: #0969da;
+    --green: #1a7f37;
+    --yellow: #9a6700;
+    --red: #d1242f;
+    --purple: #8250df;
+    --orange: #bc4c00;
+    --code-bg: #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    transition: background .3s, color .3s;
+  }
+
+  /* ── ШАПКА ── */
+  header {
+    background: linear-gradient(135deg, #0d2137 0%, #0a3d62 100%);
+    padding: 40px 24px 32px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #b8d8f8 100%); }
+  .lab-badge {
+    display: inline-block;
+    background: rgba(88,166,255,.15);
+    border: 1px solid rgba(88,166,255,.4);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    letter-spacing: .5px;
+  }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .nav-labs a {
+    padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none;
+    background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border);
+    transition: .2s;
+  }
+  .nav-labs a:hover, .nav-labs a.active {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  .theme-btn {
+    position: absolute; top: 16px; right: 20px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+    color: var(--text); padding: 6px 14px; border-radius: 20px;
+    cursor: pointer; font-size: 13px; transition: .2s;
+  }
+  .theme-btn:hover { background: rgba(255,255,255,.2); }
+
+  /* ── КОНТЕНТ ── */
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ── СЕКЦИИ ── */
+  section { margin-bottom: 48px; }
+  .section-label {
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 22px; color: var(--text); margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+
+  /* ── КАРТОЧКИ ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin-bottom: 16px;
+  }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+
+  /* ── ТЕОРИЯ-БЛОК ── */
+  .theory {
+    background: rgba(88,166,255,.06);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .theory strong { color: var(--accent); }
+
+  /* ── ВАЖНО ── */
+  .important {
+    background: rgba(248,81,73,.07);
+    border-left: 3px solid var(--red);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .tip {
+    background: rgba(63,185,80,.07);
+    border-left: 3px solid var(--green);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+
+  /* ── КОД ── */
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; overflow-x: auto;
+    font-size: 13.5px; line-height: 1.6; margin-bottom: 16px;
+    tab-size: 2;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+
+  /* Подсветка синтаксиса вручную */
+  .kw  { color: #ff7b72; }  /* ключевые слова */
+  .fn  { color: #d2a8ff; }  /* функции */
+  .str { color: #a5d6ff; }  /* строки */
+  .cmt { color: #8b949e; font-style: italic; }  /* комментарии */
+  .num { color: #79c0ff; }  /* числа */
+  .cls { color: #ffa657; }  /* классы/типы */
+  .var { color: #e6edf3; }  /* переменные */
+  .op  { color: #ff7b72; }  /* операторы */
+  .ann { color: #3fb950; }  /* аннотации */
+
+  /* ── ШАГИ ── */
+  .step {
+    display: flex; gap: 16px; align-items: flex-start;
+    margin-bottom: 32px;
+  }
+  .step-num {
+    min-width: 36px; height: 36px;
+    background: var(--accent); color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px;
+  }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+
+  /* ── ТАБЛИЦА ── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px;
+       text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── ДИАГРАММА ── */
+  .diagram {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin-bottom: 20px;
+    font-family: monospace; font-size: 13px; line-height: 1.8;
+    overflow-x: auto; white-space: pre;
+  }
+  .diagram .box-b { color: #58a6ff; }
+  .diagram .box-g { color: #3fb950; }
+  .diagram .box-o { color: #ffa657; }
+  .diagram .box-p { color: #bc8cff; }
+  .diagram .arrow { color: #8b949e; }
+
+  /* Таблица 4 */
+  .ref-table-wrap { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; }
+  .ref-table-wrap table { margin: 0; }
+  .ref-table-wrap th { position: sticky; top: 0; z-index: 1; }
+  .cat-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .cat-Кнопки      { background: rgba(88,166,255,.15); color: #58a6ff; }
+  .cat-Карточки    { background: rgba(188,140,255,.15); color: #bc8cff; }
+  .cat-Фильтры     { background: rgba(210,153,34,.15);  color: #d29922; }
+  .cat-Корзина     { background: rgba(63,185,80,.15);   color: #3fb950; }
+  .cat-Таймеры     { background: rgba(248,81,73,.15);   color: #f85149; }
+  .cat-Формы       { background: rgba(255,166,87,.15);  color: #ffa657; }
+  .cat-Навигация   { background: rgba(88,166,255,.12);  color: #79c0ff; }
+  .cat-Слайдеры    { background: rgba(188,140,255,.12); color: #d2a8ff; }
+  .cat-Уведомления { background: rgba(63,185,80,.12);   color: #56d364; }
+  .cat-UX-мелочи   { background: rgba(255,166,87,.12);  color: #ffa657; }
+  .cat-FAQ         { background: rgba(210,153,34,.12);  color: #e3b341; }
+  /* ── ЗАДАНИЯ ── */
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 6px 0; color: var(--text); font-size: 14.5px; }
+  .tasks .star { color: var(--yellow); }
+
+  /* ── НАВИГАЦИЯ ВНИЗУ ── */
+  .bottom-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .btn-nav {
+    padding: 12px 24px; border-radius: 8px; font-size: 14px;
+    font-weight: 600; text-decoration: none; transition: .2s;
+    border: 2px solid var(--accent); color: var(--accent); background: transparent;
+  }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--accent); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar {
+    text-align: center; color: var(--text-muted); font-size: 13px;
+  }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border);
+  }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">Лабораторная работа</div>
+  <h1>№1 — Стек и архитектура</h1>
+  <p>Узнаем зачем нужны React, Node.js и PostgreSQL — и как они работают вместе</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html" class="active">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ТЕОРИЯ ── -->
+  <section>
+    <div class="section-label">Теория</div>
+    <h2>🧠 Что такое стек и зачем три части?</h2>
+
+    <div class="theory">
+      <strong>Стек</strong> — это набор технологий, которые работают вместе.
+      Представьте ресторан: есть зал (то, что видит гость), кухня (логика), и склад (данные).
+      В нашем случае: <strong>React = зал</strong>, <strong>Node.js/Express = кухня</strong>, <strong>PostgreSQL = склад</strong>.
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3 style="margin-top:0">⚛️ React</h3>
+        <p style="color:var(--text-muted);font-size:14px">Работает <strong>в браузере</strong>. Рисует кнопки, карточки, корзину. Когда нажимаете кнопку — React обновляет экран мгновенно, без перезагрузки страницы.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🖥️ Node.js + Express</h3>
+        <p style="color:var(--text-muted);font-size:14px">Работает <strong>на сервере</strong>. Принимает запросы от React, проверяет права, читает/пишет данные в базу. Это посредник между интерфейсом и данными.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🐘 PostgreSQL</h3>
+        <p style="color:var(--text-muted);font-size:14px">Хранит данные <strong>навсегда</strong>. Пользователи, товары, заказы, корзина — всё здесь. Данные не пропадают при перезагрузке страницы или сервера.</p>
+      </div>
+    </div>
+
+    <div class="important">
+      <strong>❓ Зачем не обойтись одним React?</strong><br>
+      React живёт только в браузере. Закрыли вкладку — всё исчезло. Чтобы корзина сохранялась между сессиями, пользователи могли войти в аккаунт, а заказы не пропадали — нужна база данных на сервере.
+    </div>
+  </section>
+
+  <!-- ── СХЕМА ── -->
+  <section>
+    <div class="section-label">Архитектура</div>
+    <h2>🏗 Как они общаются?</h2>
+
+    <div class="diagram">
+<span class="box-b">┌─────────────────────────────────────────────┐</span>
+<span class="box-b">│             БРАУЗЕР (React)                 │</span>
+<span class="box-b">│   Компоненты → useState → fetch('/api/...')  │</span>
+<span class="box-b">└───────────────────┬─────────────────────────┘</span>
+                    <span class="arrow">│  HTTP запросы: GET, POST, PATCH, DELETE</span>
+                    <span class="arrow">▼</span>
+<span class="box-g">┌─────────────────────────────────────────────┐</span>
+<span class="box-g">│         СЕРВЕР (Node.js + Express)          │</span>
+<span class="box-g">│   Роуты → проверка JWT → SQL-запрос         │</span>
+<span class="box-g">└───────────────────┬─────────────────────────┘</span>
+                    <span class="arrow">│  SQL: SELECT, INSERT, UPDATE, DELETE</span>
+                    <span class="arrow">▼</span>
+<span class="box-o">┌─────────────────────────────────────────────┐</span>
+<span class="box-o">│              PostgreSQL                     │</span>
+<span class="box-o">│   Таблицы: users, products, cart_items...   │</span>
+<span class="box-o">└─────────────────────────────────────────────┘</span>
+    </div>
+
+    <h3>Пример: нажали «Добавить в корзину»</h3>
+    <div class="card">
+      <table>
+        <tr><th>#</th><th>Кто</th><th>Что делает</th></tr>
+        <tr><td>1</td><td>React</td><td>Пользователь нажал кнопку</td></tr>
+        <tr><td>2</td><td>React</td><td>Отправляет <code class="inline">POST /api/cart</code> с <code class="inline">{ product_id: 42 }</code></td></tr>
+        <tr><td>3</td><td>Express</td><td>Получил запрос, проверил токен пользователя</td></tr>
+        <tr><td>4</td><td>Express</td><td>Выполняет <code class="inline">INSERT INTO cart_items ...</code></td></tr>
+        <tr><td>5</td><td>PostgreSQL</td><td>Сохранил строку в таблицу</td></tr>
+        <tr><td>6</td><td>Express</td><td>Вернул <code class="inline">{ success: true, total: 1490 }</code></td></tr>
+        <tr><td>7</td><td>React</td><td>Обновил счётчик корзины, показал уведомление</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── ТЕХНОЛОГИИ ── -->
+  <section>
+    <div class="section-label">Технологии</div>
+    <h2>📦 Что будем использовать</h2>
+
+    <div class="card">
+      <table>
+        <tr><th>Технология</th><th>Зачем</th><th>Версия</th></tr>
+        <tr>
+          <td><strong>React 18</strong></td>
+          <td>Интерфейс магазина</td>
+          <td style="color:var(--green)">18.3.x</td>
+        </tr>
+        <tr>
+          <td><strong>Vite</strong></td>
+          <td>Сборщик — быстрый старт React-проекта</td>
+          <td style="color:var(--green)">5.x</td>
+        </tr>
+        <tr>
+          <td><strong>Node.js</strong></td>
+          <td>Среда выполнения JS на сервере</td>
+          <td style="color:var(--green)">22.x LTS</td>
+        </tr>
+        <tr>
+          <td><strong>Express</strong></td>
+          <td>Фреймворк для создания REST API</td>
+          <td style="color:var(--green)">4.x</td>
+        </tr>
+        <tr>
+          <td><strong>Prisma</strong></td>
+          <td>ORM — работа с БД через TypeScript</td>
+          <td style="color:var(--green)">5.x</td>
+        </tr>
+        <tr>
+          <td><strong>PostgreSQL</strong></td>
+          <td>База данных</td>
+          <td style="color:var(--green)">16.x</td>
+        </tr>
+        <tr>
+          <td><strong>TypeScript</strong></td>
+          <td>JavaScript с типами (меньше ошибок)</td>
+          <td style="color:var(--green)">5.x</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="tip">
+      <strong>💡 Что такое ORM?</strong><br>
+      ORM — это прослойка между кодом и базой данных. Вместо SQL-запроса<br>
+      <code class="inline">SELECT * FROM users WHERE id = 1</code><br>
+      вы пишете TypeScript-код:<br>
+      <code class="inline">prisma.user.findUnique({ where: { id: 1 } })</code><br>
+      Читается понятнее, TypeScript проверяет правильность полей.
+    </div>
+  </section>
+
+  <!-- ── УСТАНОВКА ── -->
+  <section>
+    <div class="section-label">Практика</div>
+    <h2>🚀 Устанавливаем всё с нуля</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Установить Node.js</h4>
+        <p>Скачайте LTS-версию с официального сайта. После установки проверьте в терминале:</p>
+        <pre><code><span class="cmt"># Открыть терминал (cmd / PowerShell / Terminal) и проверить:</span>
+node --version    <span class="cmt"># должно вывести v22.x.x</span>
+npm --version     <span class="cmt"># должно вывести 10.x.x</span>
+</code></pre>
+        <div class="tip">
+          <strong>📥 Где скачать:</strong> <code class="inline">https://nodejs.org</code> → кнопка «LTS»
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Установить PostgreSQL</h4>
+        <p>Скачайте и установите PostgreSQL 16. В процессе установки запомните пароль для пользователя <code class="inline">postgres</code>.</p>
+        <pre><code><span class="cmt"># Windows: скачать с https://www.postgresql.org/download/windows/</span>
+<span class="cmt"># Запустить установщик, запомнить пароль superuser</span>
+
+<span class="cmt"># После установки — создать базу данных:</span>
+<span class="cmt"># Открыть pgAdmin (устанавливается вместе) или psql в терминале</span>
+
+<span class="kw">psql</span> -U postgres
+<span class="cmt">-- Введите пароль, который задали при установке</span>
+
+<span class="kw">CREATE DATABASE</span> shop_db;
+<span class="kw">CREATE USER</span> shop_user <span class="kw">WITH PASSWORD</span> <span class="str">'mypassword123'</span>;
+<span class="kw">GRANT ALL PRIVILEGES ON DATABASE</span> shop_db <span class="kw">TO</span> shop_user;
+\q
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Создать структуру проекта</h4>
+        <p>Наш проект будет состоять из двух папок: фронтенд и бэкенд.</p>
+        <pre><code><span class="cmt"># Создать корневую папку проекта</span>
+mkdir my-shop
+cd my-shop
+
+<span class="cmt"># Создать фронтенд (React + Vite)</span>
+npm create vite@latest frontend -- --template react-ts
+cd frontend
+npm install
+cd ..
+
+<span class="cmt"># Создать бэкенд (Node.js + Express)</span>
+mkdir backend
+cd backend
+npm init -y
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Установить зависимости бэкенда</h4>
+        <p>Находясь в папке <code class="inline">backend/</code>, установите нужные пакеты:</p>
+        <pre><code><span class="cmt"># Основные пакеты</span>
+npm install express cors dotenv
+
+<span class="cmt"># Prisma (ORM для PostgreSQL)</span>
+npm install prisma @prisma/client
+
+<span class="cmt"># TypeScript и инструменты разработки</span>
+npm install -D typescript ts-node nodemon @types/node @types/express
+
+<span class="cmt"># Проверить — в node_modules появятся все папки</span>
+</code></pre>
+        <div class="tip">
+          <strong>💡 Разница -D и без флага:</strong><br>
+          Без <code class="inline">-D</code> — нужно в продакшне (express, prisma)<br>
+          С <code class="inline">-D</code> — только для разработки (typescript, nodemon)
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Итоговая структура папок</h4>
+        <p>После всех шагов должна получиться такая структура:</p>
+        <pre><code>my-shop/
+├── frontend/                 <span class="cmt">← React + Vite (фронтенд)</span>
+│   ├── src/
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── package.json
+│   └── vite.config.ts
+│
+└── backend/                  <span class="cmt">← Node.js + Express (бэкенд)</span>
+    ├── src/
+    │   └── index.ts          <span class="cmt">← точка входа сервера</span>
+    ├── prisma/
+    │   └── schema.prisma     <span class="cmt">← описание таблиц БД</span>
+    ├── .env                  <span class="cmt">← настройки (пароль БД, секреты)</span>
+    └── package.json
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── КАК ЗАПУСТИТЬ ── -->
+  <section>
+    <div class="section-label">Запуск</div>
+    <h2>▶ Как запустить проект</h2>
+    <p style="color:var(--text-muted);margin-bottom:16px">Нужно открыть <strong>два терминала</strong> одновременно:</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--green)">Терминал 1 — Бэкенд</h3>
+        <pre style="margin:0"><code>cd my-shop/backend
+npx nodemon src/index.ts
+
+<span class="cmt"># Запущен на http://localhost:3001</span>
+</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--accent)">Терминал 2 — Фронтенд</h3>
+        <pre style="margin:0"><code>cd my-shop/frontend
+npm run dev
+
+<span class="cmt"># Открыть http://localhost:5173</span>
+</code></pre>
+      </div>
+    </div>
+
+    <div class="important">
+      <strong>⚠️ Частая ошибка:</strong> Если React запрашивает <code class="inline">localhost:3001</code>, а бэкенд не запущен — в консоли браузера появится ошибка <code class="inline">Failed to fetch</code>. Убедитесь, что оба терминала работают.
+    </div>
+  </section>
+
+  <!-- ── САМОСТОЯТЕЛЬНО ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>Установите Node.js и PostgreSQL. Проверьте версии командами <code class="inline">node --version</code> и <code class="inline">psql --version</code>.</li>
+        <li>Создайте базу данных <code class="inline">shop_db</code> и пользователя <code class="inline">shop_user</code> с паролем.</li>
+        <li>Создайте структуру папок <code class="inline">my-shop/frontend</code> и <code class="inline">my-shop/backend</code> и установите зависимости из шагов 3–4.</li>
+        <li class="star">⭐ Нарисуйте схему стека на листе бумаги: три блока (React, Express, PostgreSQL) со стрелками и подписью «что передаётся» по каждой стрелке.</li>
+        <li class="star">⭐ Откройте pgAdmin и убедитесь, что база <code class="inline">shop_db</code> видна в списке.</li>
+        <li class="star">⭐⭐ Прочитайте: что такое REST API и HTTP-методы GET / POST / PATCH / DELETE? Объясните своими словами в 3–4 предложениях.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <span style="color:var(--text-muted);font-size:14px">Начало</span>
+    <div class="progress-bar">
+      Лаб. работа 1 из 8
+      <div class="progress-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_02.html" class="btn-nav primary">Лаб. №2 →</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  function toggleTheme() {
+    applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  }
+  btn.onclick = toggleTheme;
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>

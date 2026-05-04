@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №9 — Полный магазин</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0d2137 0%, #0a3d62 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #b8d8f8 100%); }
+  .lab-badge { display: inline-block; background: rgba(188,140,255,.15); border: 1px solid rgba(188,140,255,.4); color: var(--purple); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  p { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .tip  { background: rgba(63,185,80,.07);  border-left: 3px solid var(--green);  border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(210,153,34,.07); border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .tag { color: #7ee787; } .attr { color: #ffa657; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--purple); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  .file-header { display: flex; align-items: center; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--purple); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 8px 0; color: var(--text); font-size: 14.5px; border-bottom: 1px solid var(--border); }
+  .tasks li:last-child { border-bottom: none; }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done   { background: var(--green); }
+  .dot.active { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+  /* gap-grid */
+  .gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .gap-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .gap-card h4 { font-size: 14px; margin-bottom: 6px; }
+  .gap-card.p0 { border-left: 3px solid var(--red); }
+  .gap-card.p0 h4 { color: var(--red); }
+  .gap-card.p1 { border-left: 3px solid var(--yellow); }
+  .gap-card.p1 h4 { color: var(--yellow); }
+  .gap-card ul { list-style: none; padding: 0; }
+  .gap-card li { font-size: 13px; color: var(--text-muted); padding: 3px 0; }
+  .gap-card li::before { content: '→  '; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">🔥 Расширенная</div>
+  <h1>№9 — Заказы, поиск, фильтры, пагинация</h1>
+  <p>Добавляем критически недостающий функционал до полноценного интернет-магазина</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html" class="active">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── АНАЛИЗ ── -->
+  <section>
+    <div class="section-label">Анализ пробелов</div>
+    <h2>📊 Что не хватало после лаб. 1–8</h2>
+    <p>Лабораторные 1–8 покрывают ~35% функционала реального магазина. Эта работа закрывает критические пробелы.</p>
+    <div class="gap-grid">
+      <div class="gap-card p0">
+        <h4>🔴 P0 — Критично (без этого не магазин)</h4>
+        <ul>
+          <li>Модель Order — оформление заказа</li>
+          <li>Страница /checkout — форма адреса</li>
+          <li>Страница /orders — история заказов</li>
+          <li>Поиск товаров GET /products?q=</li>
+          <li>Фильтры по цене и категории</li>
+          <li>Пагинация — «Показать ещё»</li>
+          <li>Страница товара /product/:id</li>
+        </ul>
+      </div>
+      <div class="gap-card p1">
+        <h4>🟡 P1 — Важно (для удобства)</h4>
+        <ul>
+          <li>Избранное (Favorite model)</li>
+          <li>Toast-система уведомлений</li>
+          <li>Валидация email при регистрации</li>
+          <li>Бейдж товара (hit/new/sale)</li>
+          <li>Галерея фото товара</li>
+          <li>Профиль пользователя</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 1: ORDER ── -->
+  <section>
+    <div class="section-label">Часть 1</div>
+    <h2>🛒 Оформление заказа (Order)</h2>
+
+    <div class="theory">
+      <strong>Что происходит при заказе:</strong> создаём запись Order со снимком товаров и цен (на случай изменения каталога), очищаем корзину, создаём уведомление пользователю.
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Prisma — модели Order и OrderItem</h4>
+        <div class="file-header"><span>prisma/schema.prisma — добавить</span></div>
+        <pre><code>model Order {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  total      Float
+  address    String
+  status     String      @default(<span class="str">"pending"</span>)   <span class="cmt">// pending | paid | shipped | done</span>
+  createdAt  DateTime    @default(now())
+  user       User        @relation(fields: [userId], references: [id])
+  items      OrderItem[]
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  name      String   <span class="cmt">// снимок названия на момент заказа</span>
+  price     Float    <span class="cmt">// снимок цены на момент заказа</span>
+  qty       Int
+  order     Order   @relation(fields: [orderId], references: [id])
+}
+
+<span class="cmt">// В модели User добавить:</span>
+<span class="cmt">// orders  Order[]</span>
+</code></pre>
+        <div class="tip">
+          <strong>Почему храним name/price в OrderItem?</strong>
+          Если товар будет переименован или цена изменится — история заказа останется корректной.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Роут POST /api/orders</h4>
+        <div class="file-header"><span>backend/src/routes/orders.ts</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+<span class="kw">import</span> { requireAuth } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+
+<span class="kw">const</span> router = <span class="fn">Router</span>()
+
+<span class="cmt">// POST /api/orders — создать заказ из корзины</span>
+router.<span class="fn">post</span>(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { address } = req.body
+  <span class="kw">if</span> (!address?.trim())
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'Укажите адрес доставки'</span> })
+
+  <span class="cmt">// Загрузить корзину</span>
+  <span class="kw">const</span> cartItems = <span class="kw">await</span> prisma.cartItem.<span class="fn">findMany</span>({
+    where: { userId: req.userId },
+    include: { product: <span class="kw">true</span> }
+  })
+  <span class="kw">if</span> (!cartItems.length)
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'Корзина пуста'</span> })
+
+  <span class="kw">const</span> total = cartItems.<span class="fn">reduce</span>((sum, i) => sum + i.product.price * i.qty, <span class="num">0</span>)
+
+  <span class="cmt">// Транзакция: создать заказ + очистить корзину</span>
+  <span class="kw">const</span> order = <span class="kw">await</span> prisma.<span class="fn">$transaction</span>(<span class="kw">async</span> (tx) => {
+    <span class="kw">const</span> newOrder = <span class="kw">await</span> tx.order.<span class="fn">create</span>({
+      data: {
+        userId: req.userId!,
+        total,
+        address,
+        items: {
+          create: cartItems.<span class="fn">map</span>(i => ({
+            productId: i.productId,
+            name:  i.product.name,
+            price: i.product.price,
+            qty:   i.qty
+          }))
+        }
+      },
+      include: { items: <span class="kw">true</span> }
+    })
+
+    <span class="cmt">// Очистить корзину</span>
+    <span class="kw">await</span> tx.cartItem.<span class="fn">deleteMany</span>({ where: { userId: req.userId } })
+
+    <span class="cmt">// Создать уведомление</span>
+    <span class="kw">await</span> tx.notification.<span class="fn">create</span>({
+      data: {
+        userId:  req.userId!,
+        message: <span class="str">`Заказ #${newOrder.id} на ${total} ₽ принят`</span>
+      }
+    })
+
+    <span class="kw">return</span> newOrder
+  })
+
+  res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(order)
+})
+
+<span class="cmt">// GET /api/orders — история заказов</span>
+router.<span class="fn">get</span>(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> orders = <span class="kw">await</span> prisma.order.<span class="fn">findMany</span>({
+    where: { userId: req.userId },
+    include: { items: <span class="kw">true</span> },
+    orderBy: { createdAt: <span class="str">'desc'</span> }
+  })
+  res.<span class="fn">json</span>(orders)
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+        <div class="theory">
+          <strong>prisma.$transaction()</strong> — атомарная операция. Если любой шаг упадёт — все изменения откатятся. Заказ создастся только если корзина успешно очищена.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>CheckoutPage.tsx — страница оформления</h4>
+        <div class="file-header"><span>frontend/src/pages/CheckoutPage.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="fn">useNavigate</span> } <span class="kw">from</span> <span class="str">'react-router-dom'</span>
+<span class="kw">import</span> { <span class="fn">useCart</span> } <span class="kw">from</span> <span class="str">'../hooks/useCart'</span>
+
+<span class="kw">export function</span> <span class="fn">CheckoutPage</span>() {
+  <span class="kw">const</span> { cart } = <span class="fn">useCart</span>()
+  <span class="kw">const</span> navigate = <span class="fn">useNavigate</span>()
+  <span class="kw">const</span> [address, setAddress] = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> [error, setError]     = <span class="fn">useState</span>(<span class="str">''</span>)
+
+  <span class="kw">const</span> submit = <span class="kw">async</span> (e: React.<span class="cls">FormEvent</span>) => {
+    e.<span class="fn">preventDefault</span>()
+    <span class="fn">setLoading</span>(<span class="kw">true</span>)
+    <span class="fn">setError</span>(<span class="str">''</span>)
+
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/orders'</span>, {
+      method: <span class="str">'POST'</span>,
+      headers: {
+        <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+        <span class="str">'Authorization'</span>: <span class="str">`Bearer ${localStorage.getItem('token')}`</span>
+      },
+      body: <span class="cls">JSON</span>.<span class="fn">stringify</span>({ address })
+    })
+
+    <span class="fn">setLoading</span>(<span class="kw">false</span>)
+    <span class="kw">if</span> (!res.ok) {
+      <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>()
+      <span class="fn">setError</span>(data.error)
+    } <span class="kw">else</span> {
+      <span class="fn">navigate</span>(<span class="str">'/orders'</span>)   <span class="cmt">// перейти в историю заказов</span>
+    }
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;form</span> <span class="attr">onSubmit</span>={submit}<span class="tag">&gt;</span>
+      <span class="tag">&lt;h2&gt;</span>Оформление заказа<span class="tag">&lt;/h2&gt;</span>
+      <span class="tag">&lt;p&gt;</span>Сумма: <span class="tag">&lt;strong&gt;</span>{cart?.total} ₽<span class="tag">&lt;/strong&gt;&lt;/p&gt;</span>
+      <span class="tag">&lt;input</span>
+        <span class="attr">value</span>={address}
+        <span class="attr">onChange</span>={e => <span class="fn">setAddress</span>(e.target.value)}
+        <span class="attr">placeholder</span>=<span class="str">"Улица, дом, квартира"</span>
+        <span class="attr">required</span>
+      <span class="tag">/&gt;</span>
+      {error &amp;&amp; <span class="tag">&lt;p</span> <span class="attr">style</span>={{color:<span class="str">'red'</span>}}<span class="tag">&gt;</span>{error}<span class="tag">&lt;/p&gt;</span>}
+      <span class="tag">&lt;button</span> <span class="attr">type</span>=<span class="str">"submit"</span> <span class="attr">disabled</span>={loading}<span class="tag">&gt;</span>
+        {loading ? <span class="str">'Оформляем...'</span> : <span class="str">'Подтвердить заказ'</span>}
+      <span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/form&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>OrdersPage.tsx — история заказов</h4>
+        <div class="file-header"><span>frontend/src/pages/OrdersPage.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">OrderItem</span> { name: string; price: number; qty: number }
+<span class="kw">interface</span> <span class="cls">Order</span>     { id: number; total: number; status: string; address: string; createdAt: string; items: <span class="cls">OrderItem</span>[] }
+
+<span class="kw">export function</span> <span class="fn">OrdersPage</span>() {
+  <span class="kw">const</span> [orders, setOrders] = <span class="fn">useState</span>&lt;<span class="cls">Order</span>[]&gt;([])
+  <span class="kw">const</span> [open, setOpen]     = <span class="fn">useState</span>&lt;number | null&gt;(<span class="kw">null</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetch</span>(<span class="str">'/api/orders'</span>, {
+      headers: { <span class="str">'Authorization'</span>: <span class="str">`Bearer ${localStorage.getItem('token')}`</span> }
+    }).<span class="fn">then</span>(r => r.<span class="fn">json</span>()).<span class="fn">then</span>(setOrders)
+  }, [])
+
+  <span class="kw">const</span> STATUS: <span class="cls">Record</span>&lt;string, string&gt; = {
+    pending:  <span class="str">'⏳ Принят'</span>,
+    paid:     <span class="str">'💳 Оплачен'</span>,
+    shipped:  <span class="str">'🚚 В пути'</span>,
+    done:     <span class="str">'✅ Доставлен'</span>,
+  }
+
+  <span class="kw">if</span> (!orders.length) <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Заказов ещё нет<span class="tag">&lt;/p&gt;</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;h2&gt;</span>Мои заказы<span class="tag">&lt;/h2&gt;</span>
+      {orders.<span class="fn">map</span>(order => (
+        <span class="tag">&lt;div</span> <span class="attr">key</span>={order.id}<span class="tag">&gt;</span>
+          <span class="tag">&lt;div</span> <span class="attr">onClick</span>={() => <span class="fn">setOpen</span>(open === order.id ? <span class="kw">null</span> : order.id)}<span class="tag">&gt;</span>
+            <span class="tag">&lt;span&gt;</span>Заказ #{order.id}<span class="tag">&lt;/span&gt;</span>
+            <span class="tag">&lt;span&gt;</span>{order.total} ₽<span class="tag">&lt;/span&gt;</span>
+            <span class="tag">&lt;span&gt;</span>{STATUS[order.status]}<span class="tag">&lt;/span&gt;</span>
+            <span class="tag">&lt;span&gt;</span>{<span class="kw">new</span> <span class="fn">Date</span>(order.createdAt).<span class="fn">toLocaleDateString</span>(<span class="str">'ru'</span>)}<span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;/div&gt;</span>
+          {open === order.id &amp;&amp; (
+            <span class="tag">&lt;div&gt;</span>
+              <span class="tag">&lt;p&gt;</span>Адрес: {order.address}<span class="tag">&lt;/p&gt;</span>
+              {order.items.<span class="fn">map</span>((item, i) => (
+                <span class="tag">&lt;div</span> <span class="attr">key</span>={i}<span class="tag">&gt;</span>{item.name} × {item.qty} = {item.price * item.qty} ₽<span class="tag">&lt;/div&gt;</span>
+              ))}
+            <span class="tag">&lt;/div&gt;</span>
+          )}
+        <span class="tag">&lt;/div&gt;</span>
+      ))}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 2: ПОИСК И ФИЛЬТРЫ ── -->
+  <section>
+    <div class="section-label">Часть 2</div>
+    <h2>🔍 Поиск, фильтры, сортировка</h2>
+
+    <div class="theory">
+      <strong>Один роут — все параметры.</strong>
+      <code class="inline">GET /api/products?q=кроссовки&minPrice=500&maxPrice=3000&sort=price_asc&page=1&limit=12</code>
+      Prisma строит запрос динамически: параметры которых нет — не добавляются в WHERE.
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Backend — расширенный GET /api/products</h4>
+        <div class="file-header"><span>backend/src/routes/products.ts — обновить</span></div>
+        <pre><code>router.<span class="fn">get</span>(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> {
+    q        = <span class="str">''</span>,
+    minPrice = <span class="str">'0'</span>,
+    maxPrice = <span class="str">'999999'</span>,
+    sort     = <span class="str">'id_asc'</span>,
+    page     = <span class="str">'1'</span>,
+    limit    = <span class="str">'12'</span>
+  } = req.query <span class="kw">as</span> <span class="cls">Record</span>&lt;string, string&gt;
+
+  <span class="kw">const</span> skip = (<span class="cls">Number</span>(page) - <span class="num">1</span>) * <span class="cls">Number</span>(limit)
+
+  <span class="kw">const</span> where = {
+    price: { gte: <span class="cls">Number</span>(minPrice), lte: <span class="cls">Number</span>(maxPrice) },
+    ...(q ? { name: { contains: q, mode: <span class="str">'insensitive'</span> <span class="kw">as const</span> } } : {})
+  }
+
+  <span class="kw">const</span> orderBy: <span class="cls">Record</span>&lt;string, <span class="cls">Record</span>&lt;string, string&gt;&gt; = {
+    id_asc:     { id:    <span class="str">'asc'</span>  },
+    price_asc:  { price: <span class="str">'asc'</span>  },
+    price_desc: { price: <span class="str">'desc'</span> },
+    name_asc:   { name:  <span class="str">'asc'</span>  },
+  }
+
+  <span class="kw">const</span> [products, total] = <span class="kw">await</span> prisma.<span class="fn">$transaction</span>([
+    prisma.product.<span class="fn">findMany</span>({
+      where,
+      orderBy: orderBy[sort] ?? { id: <span class="str">'asc'</span> },
+      skip,
+      take: <span class="cls">Number</span>(limit)
+    }),
+    prisma.product.<span class="fn">count</span>({ where })
+  ])
+
+  res.<span class="fn">json</span>({
+    products,
+    total,
+    page:    <span class="cls">Number</span>(page),
+    pages:   <span class="cls">Math</span>.<span class="fn">ceil</span>(total / <span class="cls">Number</span>(limit)),
+    hasMore: skip + products.length &lt; total
+  })
+})
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>useProducts.ts — хук с фильтрами</h4>
+        <div class="file-header"><span>frontend/src/hooks/useProducts.ts</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect, useCallback } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">export interface</span> <span class="cls">Filters</span> {
+  q:        string
+  minPrice: number
+  maxPrice: number
+  sort:     string
+}
+
+<span class="kw">export function</span> <span class="fn">useProducts</span>(filters: <span class="cls">Filters</span>) {
+  <span class="kw">const</span> [products, setProducts] = <span class="fn">useState</span>&lt;<span class="kw">any</span>[]&gt;([])
+  <span class="kw">const</span> [page, setPage]         = <span class="fn">useState</span>(<span class="num">1</span>)
+  <span class="kw">const</span> [hasMore, setHasMore]   = <span class="fn">useState</span>(<span class="kw">true</span>)
+  <span class="kw">const</span> [loading, setLoading]   = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="kw">const</span> load = <span class="fn">useCallback</span>(<span class="kw">async</span> (p: number, reset = <span class="kw">false</span>) => {
+    <span class="fn">setLoading</span>(<span class="kw">true</span>)
+    <span class="kw">const</span> params = <span class="kw">new</span> <span class="cls">URLSearchParams</span>({
+      q:        filters.q,
+      minPrice: <span class="cls">String</span>(filters.minPrice),
+      maxPrice: <span class="cls">String</span>(filters.maxPrice),
+      sort:     filters.sort,
+      page:     <span class="cls">String</span>(p),
+      limit:    <span class="str">'12'</span>
+    })
+    <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/products?${params}`</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+    <span class="fn">setProducts</span>(prev => reset ? data.products : [...prev, ...data.products])
+    <span class="fn">setHasMore</span>(data.hasMore)
+    <span class="fn">setLoading</span>(<span class="kw">false</span>)
+  }, [filters])
+
+  <span class="cmt">// Сбрасывать страницу при смене фильтров</span>
+  <span class="fn">useEffect</span>(() => { <span class="fn">setPage</span>(<span class="num">1</span>); <span class="fn">load</span>(<span class="num">1</span>, <span class="kw">true</span>) }, [filters])
+
+  <span class="kw">const</span> loadMore = () => {
+    <span class="kw">const</span> next = page + <span class="num">1</span>
+    <span class="fn">setPage</span>(next)
+    <span class="fn">load</span>(next)
+  }
+
+  <span class="kw">return</span> { products, hasMore, loading, loadMore }
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>FilterPanel.tsx — панель фильтров</h4>
+        <div class="file-header"><span>frontend/src/components/FilterPanel.tsx</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">Filters</span> } <span class="kw">from</span> <span class="str">'../hooks/useProducts'</span>
+
+<span class="kw">interface</span> <span class="cls">Props</span> {
+  filters: <span class="cls">Filters</span>
+  onChange: (f: <span class="cls">Partial</span>&lt;<span class="cls">Filters</span>&gt;) => <span class="kw">void</span>
+  onReset: () => <span class="kw">void</span>
+}
+
+<span class="kw">export function</span> <span class="fn">FilterPanel</span>({ filters, onChange, onReset }: <span class="cls">Props</span>) {
+  <span class="kw">return</span> (
+    <span class="tag">&lt;aside&gt;</span>
+      {<span class="cmt">/* Поиск */</span>}
+      <span class="tag">&lt;input</span>
+        <span class="attr">value</span>={filters.q}
+        <span class="attr">onChange</span>={e => <span class="fn">onChange</span>({ q: e.target.value })}
+        <span class="attr">placeholder</span>=<span class="str">"Поиск товаров..."</span>
+      <span class="tag">/&gt;</span>
+
+      {<span class="cmt">/* Диапазон цен */</span>}
+      <span class="tag">&lt;label&gt;</span>Цена от<span class="tag">&lt;/label&gt;</span>
+      <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"range"</span> <span class="attr">min</span>=<span class="str">"0"</span> <span class="attr">max</span>=<span class="str">"10000"</span>
+        <span class="attr">value</span>={filters.minPrice}
+        <span class="attr">onChange</span>={e => <span class="fn">onChange</span>({ minPrice: <span class="cls">Number</span>(e.target.value) })}
+      <span class="tag">/&gt;</span>
+      <span class="tag">&lt;span&gt;</span>{filters.minPrice} ₽<span class="tag">&lt;/span&gt;</span>
+
+      <span class="tag">&lt;label&gt;</span>Цена до<span class="tag">&lt;/label&gt;</span>
+      <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"range"</span> <span class="attr">min</span>=<span class="str">"0"</span> <span class="attr">max</span>=<span class="str">"10000"</span>
+        <span class="attr">value</span>={filters.maxPrice}
+        <span class="attr">onChange</span>={e => <span class="fn">onChange</span>({ maxPrice: <span class="cls">Number</span>(e.target.value) })}
+      <span class="tag">/&gt;</span>
+      <span class="tag">&lt;span&gt;</span>{filters.maxPrice} ₽<span class="tag">&lt;/span&gt;</span>
+
+      {<span class="cmt">/* Сортировка */</span>}
+      <span class="tag">&lt;select</span>
+        <span class="attr">value</span>={filters.sort}
+        <span class="attr">onChange</span>={e => <span class="fn">onChange</span>({ sort: e.target.value })}
+      <span class="tag">&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="str">"id_asc"</span><span class="tag">&gt;</span>По умолчанию<span class="tag">&lt;/option&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="str">"price_asc"</span><span class="tag">&gt;</span>Дешевле<span class="tag">&lt;/option&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="str">"price_desc"</span><span class="tag">&gt;</span>Дороже<span class="tag">&lt;/option&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="str">"name_asc"</span><span class="tag">&gt;</span>По названию<span class="tag">&lt;/option&gt;</span>
+      <span class="tag">&lt;/select&gt;</span>
+
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={onReset}<span class="tag">&gt;</span>Сбросить фильтры<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/aside&gt;</span>
+  )
+}
+</code></pre>
+        <div class="tip">
+          <strong>Паттерн controlled filters:</strong> все фильтры живут в состоянии родителя (<code class="inline">CatalogPage</code>), <code class="inline">FilterPanel</code> только отображает и вызывает <code class="inline">onChange</code>. Это делает состояние предсказуемым.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 3: СТРАНИЦА ТОВАРА ── -->
+  <section>
+    <div class="section-label">Часть 3</div>
+    <h2>📄 Страница товара /product/:id</h2>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h4>Backend — GET /api/products/:id</h4>
+        <div class="file-header"><span>backend/src/routes/products.ts — добавить</span></div>
+        <pre><code>router.<span class="fn">get</span>(<span class="str">'/:id'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> product = <span class="kw">await</span> prisma.product.<span class="fn">findUnique</span>({
+    where: { id: <span class="cls">Number</span>(req.params.id) },
+    include: {
+      ratings: { select: { score: <span class="kw">true</span> } }  <span class="cmt">// для среднего рейтинга</span>
+    }
+  })
+  <span class="kw">if</span> (!product) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ error: <span class="str">'Товар не найден'</span> })
+
+  <span class="kw">const</span> avgRating = product.ratings.length
+    ? product.ratings.<span class="fn">reduce</span>((s, r) => s + r.score, <span class="num">0</span>) / product.ratings.length
+    : <span class="kw">null</span>
+
+  res.<span class="fn">json</span>({ ...product, avgRating, ratingCount: product.ratings.length })
+})
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-body">
+        <h4>ProductPage.tsx — детальная страница</h4>
+        <div class="file-header"><span>frontend/src/pages/ProductPage.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="fn">useParams</span>, <span class="cls">Link</span> } <span class="kw">from</span> <span class="str">'react-router-dom'</span>
+<span class="kw">import</span> { <span class="cls">StarRating</span> } <span class="kw">from</span> <span class="str">'../components/StarRating'</span>
+
+<span class="kw">export function</span> <span class="fn">ProductPage</span>() {
+  <span class="kw">const</span> { id } = <span class="fn">useParams</span>()
+  <span class="kw">const</span> [product, setProduct] = <span class="fn">useState</span>&lt;<span class="kw">any</span>&gt;(<span class="kw">null</span>)
+  <span class="kw">const</span> [added, setAdded]     = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetch</span>(<span class="str">`/api/products/${id}`</span>)
+      .<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(setProduct)
+  }, [id])
+
+  <span class="kw">const</span> addToCart = <span class="kw">async</span> () => {
+    <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/cart'</span>, {
+      method: <span class="str">'POST'</span>,
+      headers: {
+        <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+        <span class="str">'Authorization'</span>: <span class="str">`Bearer ${localStorage.getItem('token')}`</span>
+      },
+      body: <span class="cls">JSON</span>.<span class="fn">stringify</span>({ productId: <span class="cls">Number</span>(id) })
+    })
+    <span class="fn">setAdded</span>(<span class="kw">true</span>)
+    <span class="fn">setTimeout</span>(() => <span class="fn">setAdded</span>(<span class="kw">false</span>), <span class="num">2000</span>)
+  }
+
+  <span class="kw">if</span> (!product) <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Загрузка...<span class="tag">&lt;/p&gt;</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;p&gt;&lt;</span><span class="cls">Link</span> <span class="attr">to</span>=<span class="str">"/"</span><span class="tag">&gt;</span>← Каталог<span class="tag">&lt;/</span><span class="cls">Link</span><span class="tag">&gt;&lt;/p&gt;</span>
+
+      <span class="tag">&lt;h1&gt;</span>{product.name}<span class="tag">&lt;/h1&gt;</span>
+      <span class="tag">&lt;p&gt;</span>Цена: <span class="tag">&lt;strong&gt;</span>{product.price} ₽<span class="tag">&lt;/strong&gt;&lt;/p&gt;</span>
+
+      {product.avgRating &amp;&amp; (
+        <span class="tag">&lt;p&gt;</span>Рейтинг: ★ {product.avgRating.<span class="fn">toFixed</span>(<span class="num">1</span>)} ({product.ratingCount} оценок)<span class="tag">&lt;/p&gt;</span>
+      )}
+
+      <span class="tag">&lt;</span><span class="cls">StarRating</span> <span class="attr">productId</span>={product.id} <span class="tag">/&gt;</span>
+
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={addToCart} <span class="attr">disabled</span>={added}<span class="tag">&gt;</span>
+        {added ? <span class="str">'✓ Добавлено'</span> : <span class="str">'В корзину'</span>}
+      <span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 4: ОБНОВИТЬ APP.TSX ── -->
+  <section>
+    <div class="section-label">Часть 4</div>
+    <h2>🔗 Обновить App.tsx — новые роуты</h2>
+    <pre><code><span class="cmt">// Добавить импорты:</span>
+<span class="kw">import</span> { <span class="cls">CheckoutPage</span> } <span class="kw">from</span> <span class="str">'./pages/CheckoutPage'</span>
+<span class="kw">import</span> { <span class="cls">OrdersPage</span> }   <span class="kw">from</span> <span class="str">'./pages/OrdersPage'</span>
+<span class="kw">import</span> { <span class="cls">ProductPage</span> }  <span class="kw">from</span> <span class="str">'./pages/ProductPage'</span>
+
+<span class="cmt">// Добавить роуты внутри &lt;Routes&gt;:</span>
+<span class="tag">&lt;Route</span> <span class="attr">path</span>=<span class="str">"/product/:id"</span> <span class="attr">element</span>={<span class="tag">&lt;ProductPage /&gt;</span>} <span class="tag">/&gt;</span>
+<span class="tag">&lt;Route</span> <span class="attr">path</span>=<span class="str">"/checkout"</span>
+  <span class="attr">element</span>={<span class="tag">&lt;ProtectedRoute&gt;&lt;CheckoutPage /&gt;&lt;/ProtectedRoute&gt;</span>}
+<span class="tag">/&gt;</span>
+<span class="tag">&lt;Route</span> <span class="attr">path</span>=<span class="str">"/orders"</span>
+  <span class="attr">element</span>={<span class="tag">&lt;ProtectedRoute&gt;&lt;OrdersPage /&gt;&lt;/ProtectedRoute&gt;</span>}
+<span class="tag">/&gt;</span>
+
+<span class="cmt">// Обновить index.ts бэкенда:</span>
+<span class="kw">import</span> ordersRouter <span class="kw">from</span> <span class="str">'./routes/orders'</span>
+app.<span class="fn">use</span>(<span class="str">'/api/orders'</span>, ordersRouter)
+</code></pre>
+    <div class="card">
+      <table>
+        <tr><th>Роут</th><th>Страница</th><th>Auth</th></tr>
+        <tr><td><code class="inline">/</code></td><td>CatalogPage — поиск + фильтры + пагинация</td><td>Нет</td></tr>
+        <tr><td><code class="inline">/product/:id</code></td><td>ProductPage — детали + рейтинг + добавить в корзину</td><td>Нет</td></tr>
+        <tr><td><code class="inline">/cart</code></td><td>CartPage — список + кнопка «Оформить»</td><td>✅</td></tr>
+        <tr><td><code class="inline">/checkout</code></td><td>CheckoutPage — форма адреса</td><td>✅</td></tr>
+        <tr><td><code class="inline">/orders</code></td><td>OrdersPage — история заказов</td><td>✅</td></tr>
+        <tr><td><code class="inline">/login</code></td><td>LoginPage — вход / регистрация</td><td>Нет</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>
+          <strong>Оформите заказ</strong><br>
+          Добавьте модели <code class="inline">Order</code> и <code class="inline">OrderItem</code> в схему, примените миграцию. Создайте роут и страницу <code class="inline">/checkout</code>. Оформите тестовый заказ и проверьте, что корзина очищается.
+        </li>
+        <li>
+          <strong>Поиск и сортировка</strong><br>
+          Обновите <code class="inline">GET /api/products</code>. Добавьте строку поиска в <code class="inline">CatalogPage</code> — при вводе список должен фильтроваться через debounce (300ms).
+        </li>
+        <li>
+          <strong>Страница товара</strong><br>
+          Добавьте <code class="inline">GET /api/products/:id</code> и <code class="inline">ProductPage.tsx</code>. Кликните по карточке в каталоге — должна открыться страница с деталями товара и рейтингом.
+        </li>
+        <li>
+          <strong>⭐ Пагинация «Показать ещё»</strong><br>
+          Реализуйте кнопку «Показать ещё» используя <code class="inline">useProducts</code>. После нажатия — новые 12 товаров добавляются к уже загруженным (не заменяют их).
+        </li>
+        <li>
+          <strong>⭐ Избранное</strong><br>
+          Добавьте модель <code class="inline">Favorite</code> (@@unique [userId, productId]). Роут <code class="inline">POST /api/favorites/toggle</code>. Кнопка ♡/♥ на карточке — при клике переключает и сохраняет в БД.
+        </li>
+        <li>
+          <strong>⭐⭐ История с фильтрами в URL</strong><br>
+          Сохраняйте параметры фильтров в URL (<code class="inline">?q=кроссовки&sort=price_asc</code>) используя <code class="inline">useSearchParams</code> из React Router. При обновлении страницы — фильтры должны восстанавливаться.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_08.html" class="btn-nav">← Лаб. №8</a>
+    <div class="progress-bar">
+      Лаб. работа 9 из 9
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+      </div>
+    </div>
+    <a href="lab_01.html" class="btn-nav primary">↩ К началу</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>

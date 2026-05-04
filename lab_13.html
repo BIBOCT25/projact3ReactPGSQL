@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №13 — Категории, адрес доставки, остаток</title>
+<style>
+  :root {
+    --bg:#0d1117;--surface:#161b22;--card:#1c2230;--border:#30363d;
+    --text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;
+    --green:#3fb950;--yellow:#d29922;--red:#f85149;
+    --purple:#bc8cff;--orange:#ffa657;--code-bg:#0d1117;
+    --teal:#2dd4bf;--emerald:#34d399;
+  }
+  body.light {
+    --bg:#f6f8fa;--surface:#ffffff;--card:#f0f6fc;--border:#d0d7de;
+    --text:#1f2328;--text-muted:#636c76;--accent:#0969da;
+    --green:#1a7f37;--yellow:#9a6700;--red:#d1242f;
+    --purple:#8250df;--orange:#bc4c00;--code-bg:#f6f8fa;
+    --teal:#0d9488;--emerald:#059669;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;transition:background .3s,color .3s}
+  header{background:linear-gradient(135deg,#0a2218 0%,#071a10 100%);padding:40px 24px 32px;text-align:center;border-bottom:1px solid var(--border);position:relative}
+  body.light header{background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%)}
+  .lab-badge{display:inline-block;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.4);color:var(--emerald);padding:4px 14px;border-radius:20px;font-size:13px;margin-bottom:12px;letter-spacing:.5px}
+  header h1{font-size:clamp(20px,3.5vw,32px);color:var(--text);margin-bottom:8px}
+  header p{color:var(--text-muted);font-size:15px;max-width:680px;margin:0 auto}
+  .nav-labs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .nav-labs a{padding:5px 11px;border-radius:8px;font-size:13px;text-decoration:none;background:rgba(255,255,255,.07);color:var(--text-muted);border:1px solid var(--border);transition:.2s}
+  .nav-labs a:hover,.nav-labs a.active{background:var(--emerald);color:#fff;border-color:var(--emerald)}
+  .theme-btn{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--text);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
+  main{max-width:860px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:52px}
+  .section-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+  h2{font-size:22px;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  h3{font-size:17px;color:var(--accent);margin:24px 0 10px}
+  p{color:var(--text-muted);font-size:15px;margin-bottom:12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+  .theory{background:rgba(88,166,255,.06);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .theory strong{color:var(--accent)}
+  .tip{background:rgba(63,185,80,.07);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .warn{background:rgba(210,153,34,.07);border-left:3px solid var(--yellow);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  .danger{background:rgba(248,81,73,.07);border-left:3px solid var(--red);border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:20px;overflow-x:auto;font-size:13.5px;line-height:1.65;margin-bottom:16px;tab-size:2}
+  code{font-family:'Cascadia Code','Fira Code','Consolas',monospace}
+  .inline{background:var(--card);padding:2px 7px;border-radius:4px;font-family:monospace;font-size:13px}
+  .kw{color:#ff7b72}.fn{color:#d2a8ff}.str{color:#a5d6ff}
+  .cmt{color:#8b949e;font-style:italic}.num{color:#79c0ff}
+  .cls{color:#ffa657}.tag{color:#7ee787}.attr{color:#ffa657}
+  .step{display:flex;gap:16px;align-items:flex-start;margin-bottom:32px}
+  .step-num{min-width:36px;height:36px;background:var(--emerald);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;margin-top:2px}
+  .step-body{flex:1}
+  .step-body h4{font-size:16px;color:var(--text);margin-bottom:8px}
+  .step-body p{color:var(--text-muted);margin-bottom:10px;font-size:14.5px}
+  .file-header{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:10px 10px 0 0;padding:10px 16px;font-size:13px;color:var(--text-muted)}
+  .file-header span{color:var(--emerald);font-family:monospace}
+  .file-header+pre{border-radius:0 0 10px 10px;margin-top:0}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  th{background:var(--card);color:var(--text-muted);font-size:12px;letter-spacing:.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border)}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .tasks{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px}
+  .tasks h3{color:var(--yellow);margin-top:0}
+  .tasks ol{padding-left:20px}
+  .tasks li{padding:8px 0;color:var(--text);font-size:14.5px;border-bottom:1px solid var(--border)}
+  .tasks li:last-child{border-bottom:none}
+  .bottom-nav{display:flex;justify-content:space-between;align-items:center;margin-top:60px;padding-top:24px;border-top:1px solid var(--border)}
+  .btn-nav{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:.2s;border:2px solid var(--accent);color:var(--accent);background:transparent}
+  .btn-nav:hover{background:var(--accent);color:#fff}
+  .btn-nav.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn-nav.primary:hover{opacity:.85}
+  .progress-bar{text-align:center;color:var(--text-muted);font-size:13px}
+  .progress-dots{display:flex;gap:5px;justify-content:center;margin-top:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .dot.done{background:var(--green)}
+  .dot.active{background:var(--emerald);box-shadow:0 0 6px var(--emerald)}
+  /* Category pills demo */
+  .cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .cat-pill{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text-muted);cursor:pointer;font-size:13px;transition:.2s}
+  .cat-pill:hover,.cat-pill.active{background:var(--emerald);color:#fff;border-color:var(--emerald)}
+  /* Breadcrumb demo */
+  .breadcrumb{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--text-muted);margin-bottom:16px}
+  .breadcrumb a{color:var(--accent);text-decoration:none}
+  .breadcrumb a:hover{text-decoration:underline}
+  /* Stock badge */
+  .stock-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .stock-ok{background:rgba(63,185,80,.15);color:var(--green)}
+  .stock-low{background:rgba(210,153,34,.15);color:var(--yellow)}
+  .stock-out{background:rgba(248,81,73,.15);color:var(--red)}
+  /* Address form demo */
+  .addr-form input,.addr-form select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:14px;margin-bottom:10px}
+  .addr-form input:focus,.addr-form select:focus{outline:none;border-color:var(--emerald)}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">🏗 Архитектура каталога</div>
+  <h1>№13 — Категории, адрес доставки, остаток товара</h1>
+  <p>Навигация по категориям, хлебные крошки, адрес в заказе, атомарный декремент остатка</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html" class="active">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ══════════════════════════════════════════
+     ЧАСТЬ 1 — КАТЕГОРИИ
+═══════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Часть 1 — Category модель</div>
+  <h2>🗂 Категории товаров</h2>
+
+  <div class="theory">
+    <strong>Проблема без категорий:</strong> каталог из 500 товаров — это просто список без навигации.
+    Категории дают структуру: «Одежда → Футболки», «Обувь → Кроссовки».
+    PostgreSQL + Prisma позволяют строить дерево категорий через <code class="inline">parentId</code> — одна таблица, бесконечная вложенность.
+  </div>
+
+  <p>Демо — фильтрация по категориям:</p>
+  <div class="cat-pills">
+    <span class="cat-pill active" onclick="selectCat(this)">Все</span>
+    <span class="cat-pill" onclick="selectCat(this)">👗 Одежда</span>
+    <span class="cat-pill" onclick="selectCat(this)">👟 Обувь</span>
+    <span class="cat-pill" onclick="selectCat(this)">💼 Аксессуары</span>
+    <span class="cat-pill" onclick="selectCat(this)">🎒 Сумки</span>
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Обновить Prisma-схему — добавить Category</h4>
+      <div class="file-header"><span>prisma/schema.prisma (добавить)</span></div>
+      <pre><code><span class="kw">model</span> <span class="cls">Category</span> {
+  id        Int        @id @default(<span class="fn">autoincrement</span>())
+  name      String
+  slug      String     @unique   <span class="cmt">// URL: /category/odezhda</span>
+  parentId  Int?                 <span class="cmt">// null = корневая категория</span>
+  parent    <span class="cls">Category</span>?  @relation(<span class="str">"subcategories"</span>, fields: [parentId], references: [id])
+  children  <span class="cls">Category</span>[] @relation(<span class="str">"subcategories"</span>)
+  products  <span class="cls">Product</span>[]
+}
+
+<span class="cmt">// Добавить в модель Product:</span>
+<span class="kw">model</span> <span class="cls">Product</span> {
+  <span class="cmt">// ... существующие поля ...</span>
+  categoryId  Int?
+  category    <span class="cls">Category</span>? @relation(fields: [categoryId], references: [id])
+}
+</code></pre>
+      <pre><code><span class="cmt"># Применить изменения:</span>
+npx prisma migrate dev --name add-categories
+</code></pre>
+      <p>Заполни тестовые данные через seed-скрипт:</p>
+      <div class="file-header"><span>prisma/seed.ts</span></div>
+      <pre><code><span class="kw">await</span> prisma.category.<span class="fn">createMany</span>({
+  data: [
+    { name: <span class="str">'Одежда'</span>,      slug: <span class="str">'odezhda'</span>    },
+    { name: 'Обувь',       slug: <span class="str">'obuv'</span>       },
+    { name: <span class="str">'Аксессуары'</span>, slug: <span class="str">'aksessuary'</span> },
+  ]
+})
+<span class="cmt">// Подкатегории — указываем parentId</span>
+<span class="kw">const</span> odezhda = <span class="kw">await</span> prisma.category.<span class="fn">findUnique</span>({ where: { slug: <span class="str">'odezhda'</span> } })
+<span class="kw">await</span> prisma.category.<span class="fn">createMany</span>({
+  data: [
+    { name: <span class="str">'Футболки'</span>, slug: <span class="str">'futbolki'</span>, parentId: odezhda!.id },
+    { name: <span class="str">'Джинсы'</span>,   slug: <span class="str">'dzhinsy'</span>,  parentId: odezhda!.id },
+  ]
+})
+</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Backend — GET /api/categories + фильтрация товаров</h4>
+      <div class="file-header"><span>backend/src/routes/categories.ts</span></div>
+      <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+
+<span class="kw">const</span> router = <span class="cls">Router</span>()
+
+<span class="cmt">// Все корневые категории с подкатегориями</span>
+router.<span class="fn">get</span>(<span class="str">'/'</span>, <span class="kw">async</span> (_req, res) => {
+  <span class="kw">const</span> cats = <span class="kw">await</span> prisma.category.<span class="fn">findMany</span>({
+    where:   { parentId: <span class="kw">null</span> },           <span class="cmt">// только корневые</span>
+    include: { children: <span class="kw">true</span> },           <span class="cmt">// + их дети</span>
+    orderBy: { name: <span class="str">'asc'</span> }
+  })
+  res.<span class="fn">json</span>(cats)
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+      <p>Обновить <code class="inline">GET /api/products</code> — добавить фильтр по категории:</p>
+      <pre><code>router.<span class="fn">get</span>(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { page = <span class="str">'1'</span>, limit = <span class="str">'12'</span>, categoryId, q } = req.query <span class="kw">as</span> <span class="cls">Record</span>&lt;string, string&gt;
+  <span class="kw">const</span> skip = (<span class="cls">Number</span>(page) - <span class="num">1</span>) * <span class="cls">Number</span>(limit)
+
+  <span class="kw">const</span> where = {
+    ...(categoryId ? { categoryId: <span class="cls">Number</span>(categoryId) } : {}),
+    ...(q ? {
+      name: { contains: q, mode: <span class="str">'insensitive'</span> <span class="kw">as const</span> }
+    } : {})
+  }
+
+  <span class="kw">const</span> [products, total] = <span class="kw">await</span> <span class="cls">Promise</span>.<span class="fn">all</span>([
+    prisma.product.<span class="fn">findMany</span>({
+      where,
+      skip, take: <span class="cls">Number</span>(limit),
+      include: { category: { select: { name: <span class="kw">true</span>, slug: <span class="kw">true</span> } } }
+    }),
+    prisma.product.<span class="fn">count</span>({ where })
+  ])
+
+  res.<span class="fn">json</span>({ products, total, hasMore: skip + products.length &lt; total })
+})
+</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>React — CategoryNav + хлебные крошки</h4>
+      <div class="file-header"><span>frontend/src/components/CategoryNav.tsx</span></div>
+      <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="fn">useSearchParams</span> } <span class="kw">from</span> <span class="str">'react-router-dom'</span>
+
+<span class="kw">interface</span> <span class="cls">Category</span> { id: number; name: string; slug: string; children: <span class="cls">Category</span>[] }
+
+<span class="kw">export function</span> <span class="fn">CategoryNav</span>() {
+  <span class="kw">const</span> [cats, setCats]           = <span class="fn">useState</span>&lt;<span class="cls">Category</span>[]&gt;([])
+  <span class="kw">const</span> [searchParams, setParams] = <span class="fn">useSearchParams</span>()
+  <span class="kw">const</span> active = searchParams.<span class="fn">get</span>(<span class="str">'categoryId'</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetch</span>(<span class="str">'/api/categories'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>()).<span class="fn">then</span>(setCats)
+  }, [])
+
+  <span class="kw">const</span> select = (id: number | null) => {
+    <span class="kw">const</span> next = <span class="kw">new</span> <span class="cls">URLSearchParams</span>(searchParams)
+    <span class="kw">if</span> (id) next.<span class="fn">set</span>(<span class="str">'categoryId'</span>, <span class="cls">String</span>(id)); <span class="kw">else</span> next.<span class="fn">delete</span>(<span class="str">'categoryId'</span>)
+    next.<span class="fn">delete</span>(<span class="str">'page'</span>)   <span class="cmt">// сбросить пагинацию при смене категории</span>
+    <span class="fn">setParams</span>(next)
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, gap: <span class="num">8</span>, flexWrap: <span class="str">'wrap'</span>, marginBottom: <span class="num">20</span> }}<span class="tag">&gt;</span>
+      <span class="tag">&lt;button</span>
+        <span class="attr">onClick</span>={() => <span class="fn">select</span>(<span class="kw">null</span>)}
+        <span class="attr">style</span>={{ background: !active ? <span class="str">'#34d399'</span> : <span class="str">'transparent'</span> }}
+      <span class="tag">&gt;</span>Все<span class="tag">&lt;/button&gt;</span>
+      {cats.<span class="fn">map</span>(cat => (
+        <span class="tag">&lt;button</span>
+          <span class="attr">key</span>={cat.id}
+          <span class="attr">onClick</span>={() => <span class="fn">select</span>(cat.id)}
+          <span class="attr">style</span>={{ background: active === <span class="cls">String</span>(cat.id) ? <span class="str">'#34d399'</span> : <span class="str">'transparent'</span> }}
+        <span class="tag">&gt;</span>
+          {cat.name}
+        <span class="tag">&lt;/button&gt;</span>
+      ))}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      <div class="tip">
+        <strong>useSearchParams</strong> — встроенный хук React Router.
+        Хранит фильтры в URL (<code class="inline">/products?categoryId=2&amp;page=1</code>).
+        Пользователь может поделиться ссылкой на отфильтрованный каталог.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Хлебные крошки (Breadcrumb)</h4>
+      <p>Демо:</p>
+      <div class="breadcrumb">
+        <a href="#">Главная</a> / <a href="#">Одежда</a> / <span style="color:var(--text)">Футболки</span>
+      </div>
+      <div class="file-header"><span>frontend/src/components/Breadcrumb.tsx</span></div>
+      <pre><code><span class="kw">import</span> { <span class="cls">Link</span> } <span class="kw">from</span> <span class="str">'react-router-dom'</span>
+
+<span class="kw">interface</span> <span class="cls">Crumb</span> { label: string; href?: string }
+
+<span class="kw">export function</span> <span class="fn">Breadcrumb</span>({ crumbs }: { crumbs: <span class="cls">Crumb</span>[] }) {
+  <span class="kw">return</span> (
+    <span class="tag">&lt;nav</span> <span class="attr">aria-label</span>=<span class="str">"breadcrumb"</span> <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, gap: <span class="num">6</span>, fontSize: <span class="num">14</span>, marginBottom: <span class="num">16</span> }}<span class="tag">&gt;</span>
+      {crumbs.<span class="fn">map</span>((c, i) => (
+        <span class="tag">&lt;span</span> <span class="attr">key</span>={i} <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, alignItems: <span class="str">'center'</span>, gap: <span class="num">6</span> }}<span class="tag">&gt;</span>
+          {i &gt; <span class="num">0</span> &amp;&amp; <span class="tag">&lt;span</span> <span class="attr">style</span>={{ color: <span class="str">'#8b949e'</span> }}<span class="tag">&gt;</span>/<span class="tag">&lt;/span&gt;</span>}
+          {c.href
+            ? <span class="tag">&lt;</span><span class="cls">Link</span> <span class="attr">to</span>={c.href} <span class="attr">style</span>={{ color: <span class="str">'#58a6ff'</span> }}<span class="tag">&gt;</span>{c.label}<span class="tag">&lt;/</span><span class="cls">Link</span><span class="tag">&gt;</span>
+            : <span class="tag">&lt;span&gt;</span>{c.label}<span class="tag">&lt;/span&gt;</span>
+          }
+        <span class="tag">&lt;/span&gt;</span>
+      ))}
+    <span class="tag">&lt;/nav&gt;</span>
+  )
+}
+</code></pre>
+      <p>Использование на странице товара:</p>
+      <pre><code><span class="tag">&lt;</span><span class="cls">Breadcrumb</span> <span class="attr">crumbs</span>={[
+  { label: <span class="str">'Главная'</span>,           href: <span class="str">'/'</span>                             },
+  { label: product.category.name, href: <span class="str">`/?categoryId=${product.categoryId}`</span> },
+  { label: product.name           <span class="cmt">/* текущая страница — без href */</span>   }
+]} <span class="tag">/&gt;</span>
+</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     ЧАСТЬ 2 — АДРЕС ДОСТАВКИ
+═══════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Часть 2 — Address модель</div>
+  <h2>📍 Адрес доставки</h2>
+
+  <div class="theory">
+    <strong>Задача:</strong> пользователь сохраняет один или несколько адресов.
+    При оформлении — выбирает из сохранённых или вводит новый.
+    Адрес сохраняется в заказе как <em>снимок</em> (строка или JSON), чтобы его изменение в профиле не затронуло старые заказы.
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Добавить модели Address и обновить Order</h4>
+      <div class="file-header"><span>prisma/schema.prisma (добавить)</span></div>
+      <pre><code><span class="kw">model</span> <span class="cls">Address</span> {
+  id         Int     @id @default(<span class="fn">autoincrement</span>())
+  userId     Int
+  label      String  @default(<span class="str">"Дом"</span>)  <span class="cmt">// "Дом", "Работа", ...</span>
+  city       String
+  street     String
+  building   String
+  apartment  String?
+  zip        String?
+  isDefault  Boolean @default(<span class="kw">false</span>)
+  user       <span class="cls">User</span>    @relation(fields: [userId], references: [id])
+  orders     <span class="cls">Order</span>[]
+}
+
+<span class="cmt">// Обновить Order — добавить поля:</span>
+<span class="kw">model</span> <span class="cls">Order</span> {
+  <span class="cmt">// ... существующие поля ...</span>
+  addressId      Int?
+  addressSnapshot <span class="cls">Json</span>?    <span class="cmt">// копия адреса на момент заказа</span>
+  address        <span class="cls">Address</span>? @relation(fields: [addressId], references: [id])
+}
+
+<span class="cmt">// Добавить в User:</span>
+addresses <span class="cls">Address</span>[]
+</code></pre>
+      <pre><code>npx prisma migrate dev --name add-address
+</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <h4>Backend — CRUD адресов</h4>
+      <div class="file-header"><span>backend/src/routes/addresses.ts</span></div>
+      <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+<span class="kw">import</span> { requireAuth } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+
+<span class="kw">const</span> router = <span class="cls">Router</span>()
+router.<span class="fn">use</span>(requireAuth)   <span class="cmt">// все маршруты требуют авторизации</span>
+
+<span class="cmt">// Список адресов пользователя</span>
+router.<span class="fn">get</span>(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> list = <span class="kw">await</span> prisma.address.<span class="fn">findMany</span>({
+    where:   { userId: req.userId },
+    orderBy: { isDefault: <span class="str">'desc'</span> }   <span class="cmt">// default — первым</span>
+  })
+  res.<span class="fn">json</span>(list)
+})
+
+<span class="cmt">// Создать адрес</span>
+router.<span class="fn">post</span>(<span class="str">'/'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { label, city, street, building, apartment, zip, isDefault } = req.body
+
+  <span class="cmt">// Если новый адрес — default, снять флаг с остальных</span>
+  <span class="kw">if</span> (isDefault) {
+    <span class="kw">await</span> prisma.address.<span class="fn">updateMany</span>({
+      where: { userId: req.userId },
+      data:  { isDefault: <span class="kw">false</span> }
+    })
+  }
+
+  <span class="kw">const</span> addr = <span class="kw">await</span> prisma.address.<span class="fn">create</span>({
+    data: { userId: req.userId!, label, city, street, building, apartment, zip, isDefault: !!isDefault }
+  })
+  res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(addr)
+})
+
+<span class="cmt">// Удалить адрес (только свой)</span>
+router.<span class="fn">delete</span>(<span class="str">'/:id'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> addr = <span class="kw">await</span> prisma.address.<span class="fn">findUnique</span>({ where: { id: <span class="cls">Number</span>(req.params.id) } })
+  <span class="kw">if</span> (!addr || addr.userId !== req.userId)
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ error: <span class="str">'Не найден'</span> })
+
+  <span class="kw">await</span> prisma.address.<span class="fn">delete</span>({ where: { id: addr.id } })
+  res.<span class="fn">json</span>({ ok: <span class="kw">true</span> })
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <h4>Обновить POST /api/orders — сохранить адрес-снимок</h4>
+      <p>Снимок (JSON-копия) нужен, чтобы изменение адреса в профиле <strong>не изменяло</strong> уже оформленные заказы:</p>
+      <pre><code>router.<span class="fn">post</span>(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { deliveryRateId, addressId } = req.body
+
+  <span class="cmt">// Получить адрес и проверить принадлежность</span>
+  <span class="kw">const</span> address = addressId
+    ? <span class="kw">await</span> prisma.address.<span class="fn">findUnique</span>({ where: { id: addressId } })
+    : <span class="kw">null</span>
+
+  <span class="kw">if</span> (addressId &amp;&amp; (!address || address.userId !== req.userId))
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'Некорректный адрес'</span> })
+
+  <span class="cmt">// addressSnapshot — JSON-копия для истории</span>
+  <span class="kw">const</span> addressSnapshot = address
+    ? { city: address.city, street: address.street, building: address.building }
+    : <span class="kw">null</span>
+
+  <span class="cmt">// ... получить items корзины, посчитать total ...</span>
+
+  <span class="kw">const</span> order = <span class="kw">await</span> prisma.order.<span class="fn">create</span>({
+    data: {
+      userId:          req.userId!,
+      total,
+      deliveryRateId:  deliveryRateId ?? <span class="kw">null</span>,
+      addressId:       addressId     ?? <span class="kw">null</span>,
+      addressSnapshot,                        <span class="cmt">// снимок адреса</span>
+      items: { create: orderItems }
+    }
+  })
+  res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(order)
+})
+</code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <h4>React — AddressSelector на CheckoutPage</h4>
+      <p>Форма (демо):</p>
+      <div class="addr-form card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <input placeholder="Город" value="Москва" readonly>
+          <input placeholder="Улица" value="Тверская" readonly>
+          <input placeholder="Дом/корпус" value="15" readonly>
+          <input placeholder="Квартира" value="42" readonly>
+        </div>
+        <button style="background:var(--emerald);color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;margin-top:4px">💾 Сохранить адрес</button>
+      </div>
+
+      <div class="file-header"><span>frontend/src/components/AddressSelector.tsx</span></div>
+      <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Address</span> {
+  id: number; label: string; city: string
+  street: string; building: string; isDefault: boolean
+}
+
+<span class="kw">export function</span> <span class="fn">AddressSelector</span>({
+  onSelect
+}: {
+  onSelect: (id: number | null) => <span class="kw">void</span>
+}) {
+  <span class="kw">const</span> [addresses, setAddresses] = <span class="fn">useState</span>&lt;<span class="cls">Address</span>[]&gt;([])
+  <span class="kw">const</span> [selected,  setSelected]  = <span class="fn">useState</span>&lt;number | null&gt;(<span class="kw">null</span>)
+  <span class="kw">const</span> [showForm,  setShowForm]  = <span class="fn">useState</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> token = localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetch</span>(<span class="str">'/api/addresses'</span>, { headers: { <span class="cls">Authorization</span>: <span class="str">`Bearer ${token}`</span> } })
+      .<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+      .<span class="fn">then</span>((list: <span class="cls">Address</span>[]) => {
+        <span class="fn">setAddresses</span>(list)
+        <span class="kw">const</span> def = list.<span class="fn">find</span>(a => a.isDefault)
+        <span class="kw">if</span> (def) { <span class="fn">setSelected</span>(def.id); <span class="fn">onSelect</span>(def.id) }
+      })
+  }, [])
+
+  <span class="kw">const</span> choose = (id: number) => {
+    <span class="fn">setSelected</span>(id)
+    <span class="fn">onSelect</span>(id)
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;h3&gt;</span>Адрес доставки<span class="tag">&lt;/h3&gt;</span>
+      {addresses.<span class="fn">map</span>(addr => (
+        <span class="tag">&lt;label</span>
+          <span class="attr">key</span>={addr.id}
+          <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, gap: <span class="num">12</span>, padding: <span class="num">14</span>, cursor: <span class="str">'pointer'</span>,
+            border: <span class="str">`2px solid ${selected === addr.id ? '#34d399' : '#30363d'}`</span>,
+            borderRadius: <span class="num">10</span>, marginBottom: <span class="num">8</span> }}
+        <span class="tag">&gt;</span>
+          <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"radio"</span> <span class="attr">checked</span>={selected === addr.id} <span class="attr">onChange</span>={() => <span class="fn">choose</span>(addr.id)} <span class="tag">/&gt;</span>
+          <span class="tag">&lt;span&gt;</span>
+            <span class="tag">&lt;strong&gt;</span>{addr.label}<span class="tag">&lt;/strong&gt;</span>
+            {' — '}{addr.city}, {addr.street}, {addr.building}
+          <span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/label&gt;</span>
+      ))}
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={() => <span class="fn">setShowForm</span>(v => !v)}<span class="tag">&gt;</span>
+        {showForm ? <span class="str">'✕ Отмена'</span> : <span class="str">'+ Новый адрес'</span>}
+      <span class="tag">&lt;/button&gt;</span>
+      {showForm &amp;&amp; <span class="tag">&lt;</span><span class="cls">NewAddressForm</span> <span class="attr">onSaved</span>={<span class="kw">async</span> () => { <span class="cmt">/* обновить список */</span> }} <span class="tag">/&gt;</span>}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     ЧАСТЬ 3 — ДЕКРЕМЕНТ ОСТАТКА
+═══════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Часть 3 — Атомарный остаток</div>
+  <h2>📦 Декремент остатка товара при заказе</h2>
+
+  <div class="danger">
+    <strong>Гонка данных (race condition):</strong> если два пользователя одновременно покупают последний товар,
+    оба могут пройти проверку <code class="inline">if (stock &gt; 0)</code> и оба создадут заказ.
+    Решение: <strong>транзакция + атомарный декремент</strong> прямо в SQL.
+  </div>
+
+  <p>Демо — индикаторы остатка:</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+    <span class="stock-badge stock-ok">✅ В наличии (23 шт.)</span>
+    <span class="stock-badge stock-low">⚠️ Заканчивается (2 шт.)</span>
+    <span class="stock-badge stock-out">❌ Нет в наличии</span>
+  </div>
+
+  <div class="step">
+    <div class="step-num">9</div>
+    <div class="step-body">
+      <h4>Транзакция: заказ + декремент остатка</h4>
+      <p>Весь процесс оформления заказа должен быть <strong>одной транзакцией</strong> — либо всё, либо ничего.</p>
+      <div class="file-header"><span>backend/src/routes/orders.ts</span></div>
+      <pre><code>router.<span class="fn">post</span>(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> result = <span class="kw">await</span> prisma.<span class="fn">$transaction</span>(<span class="kw">async</span> (tx) => {
+
+      <span class="cmt">// 1. Получить корзину</span>
+      <span class="kw">const</span> cartItems = <span class="kw">await</span> tx.cartItem.<span class="fn">findMany</span>({
+        where:   { userId: req.userId },
+        include: { product: <span class="kw">true</span> }
+      })
+      <span class="kw">if</span> (!cartItems.length) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">'Корзина пуста'</span>)
+
+      <span class="cmt">// 2. Проверить остатки + атомарный декремент</span>
+      <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> cartItems) {
+        <span class="kw">if</span> (item.product.stock &lt; item.qty) {
+          <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">`"${item.product.name}": недостаточно товара (осталось ${item.product.stock})`</span>)
+        }
+        <span class="cmt">// decrement — атомарная операция, защита от гонки</span>
+        <span class="kw">await</span> tx.product.<span class="fn">update</span>({
+          where: { id: item.productId },
+          data:  { stock: { decrement: item.qty } }
+        })
+      }
+
+      <span class="cmt">// 3. Посчитать итог</span>
+      <span class="kw">const</span> delivery  = req.body.deliveryRateId
+        ? <span class="kw">await</span> tx.deliveryRate.<span class="fn">findUnique</span>({ where: { id: req.body.deliveryRateId } })
+        : <span class="kw">null</span>
+      <span class="kw">const</span> subtotal  = cartItems.<span class="fn">reduce</span>((s, i) => s + i.product.price * i.qty, <span class="num">0</span>)
+      <span class="kw">const</span> total     = subtotal + (delivery?.price ?? <span class="num">0</span>)
+
+      <span class="cmt">// 4. Создать заказ с позициями</span>
+      <span class="kw">const</span> order = <span class="kw">await</span> tx.order.<span class="fn">create</span>({
+        data: {
+          userId:          req.userId!,
+          total,
+          deliveryRateId:  req.body.deliveryRateId ?? <span class="kw">null</span>,
+          addressId:       req.body.addressId      ?? <span class="kw">null</span>,
+          addressSnapshot: req.body.addressSnapshot ?? <span class="kw">null</span>,
+          items: {
+            create: cartItems.<span class="fn">map</span>(i => ({
+              productId: i.productId,
+              qty:       i.qty,
+              price:     i.product.price   <span class="cmt">// снимок цены</span>
+            }))
+          }
+        }
+      })
+
+      <span class="cmt">// 5. Очистить корзину</span>
+      <span class="kw">await</span> tx.cartItem.<span class="fn">deleteMany</span>({ where: { userId: req.userId } })
+
+      <span class="kw">return</span> order
+    })
+
+    res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(result)
+
+  } <span class="kw">catch</span> (err: <span class="kw">any</span>) {
+    <span class="cmt">// Транзакция автоматически откатилась — остатки не изменились</span>
+    res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: err.message })
+  }
+})
+</code></pre>
+      <div class="tip">
+        <strong>Prisma <code class="inline">$transaction</code></strong> оборачивает всё в одну PostgreSQL-транзакцию.
+        Если на шаге 2 остатка не хватает — вся транзакция откатывается,
+        декремент отменяется, заказ не создаётся.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">10</div>
+    <div class="step-body">
+      <h4>React — StockBadge на карточке товара</h4>
+      <div class="file-header"><span>frontend/src/components/StockBadge.tsx</span></div>
+      <pre><code><span class="kw">export function</span> <span class="fn">StockBadge</span>({ stock }: { stock: number }) {
+  <span class="kw">if</span> (stock === <span class="num">0</span>)  <span class="kw">return</span> <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"stock-out"</span><span class="tag">&gt;</span>❌ Нет в наличии<span class="tag">&lt;/span&gt;</span>
+  <span class="kw">if</span> (stock &lt;= <span class="num">3</span>)  <span class="kw">return</span> <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"stock-low"</span><span class="tag">&gt;</span>⚠️ Осталось {stock} шт.<span class="tag">&lt;/span&gt;</span>
+  <span class="kw">return</span>             <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"stock-ok"</span><span class="tag">&gt;</span>✅ В наличии<span class="tag">&lt;/span&gt;</span>
+}
+</code></pre>
+      <p>На <code class="inline">ProductPage</code> — также заблокировать кнопку «В корзину»:</p>
+      <pre><code><span class="tag">&lt;</span><span class="cls">StockBadge</span> <span class="attr">stock</span>={product.stock} <span class="tag">/&gt;</span>
+<span class="tag">&lt;button</span>
+  <span class="attr">disabled</span>={product.stock === <span class="num">0</span>}
+  <span class="attr">onClick</span>={addToCart}
+  <span class="attr">style</span>={{ opacity: product.stock === <span class="num">0</span> ? <span class="num">0.5</span> : <span class="num">1</span> }}
+<span class="tag">&gt;</span>
+  {product.stock === <span class="num">0</span> ? <span class="str">'Нет в наличии'</span> : <span class="str">'В корзину'</span>}
+<span class="tag">&lt;/button&gt;</span>
+</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     СВЯЗЫВАЕМ ВСЁ: полный поток оформления
+═══════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Итог</div>
+  <h2>🔗 Полный поток оформления заказа</h2>
+
+  <div class="card">
+    <table>
+      <tr><th>Шаг</th><th>Страница</th><th>Что происходит</th></tr>
+      <tr><td>1</td><td><code class="inline">/</code> — Каталог</td><td>Фильтр по категории → хлебные крошки → карточки с <code class="inline">StockBadge</code></td></tr>
+      <tr><td>2</td><td><code class="inline">/product/:id</code></td><td>Галерея, рейтинг, «В корзину» (disabled если stock=0)</td></tr>
+      <tr><td>3</td><td><code class="inline">/cart</code></td><td>Список, пересчёт, промокод, «До бесплатной доставки»</td></tr>
+      <tr><td>4</td><td><code class="inline">/checkout</code></td><td>Выбор адреса + способ доставки → итог → «Оформить»</td></tr>
+      <tr><td>5</td><td>POST /api/orders</td><td>Транзакция: проверка остатков → декремент → создание заказа → очистка корзины</td></tr>
+      <tr><td>6</td><td>Toast + редирект</td><td>«Заказ оформлен!» → переход на <code class="inline">/orders</code></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     ЗАДАНИЯ
+═══════════════════════════════════════════ -->
+<section>
+  <div class="tasks">
+    <h3>📝 Задания для выполнения</h3>
+    <ol>
+      <li>
+        <strong>Категории</strong><br>
+        Добавь модель <code class="inline">Category</code> в схему Prisma. Создай 3 корневые и 2 подкатегории через seed-скрипт.
+        В каталоге: клик на категорию фильтрует товары, URL обновляется (<code class="inline">?categoryId=2</code>).
+      </li>
+      <li>
+        <strong>Хлебные крошки</strong><br>
+        На странице товара добавь <code class="inline">Breadcrumb</code>: Главная → Категория → Название товара.
+        Ссылки на хлебных крошках кликабельны.
+      </li>
+      <li>
+        <strong>Адреса</strong><br>
+        В профиле пользователя добавь список адресов с кнопкой «+ Новый адрес».
+        На <code class="inline">CheckoutPage</code> — <code class="inline">AddressSelector</code> перед выбором доставки.
+        Убедись: удалить чужой адрес через DevTools → Network невозможно (403).
+      </li>
+      <li>
+        <strong>StockBadge</strong><br>
+        Добавь <code class="inline">StockBadge</code> на карточку товара и страницу товара.
+        Кнопка «В корзину» блокируется при <code class="inline">stock === 0</code>.
+      </li>
+      <li>
+        <strong>⭐ Транзакция оформления</strong><br>
+        Оберни создание заказа в <code class="inline">prisma.$transaction</code>.
+        Тест: вручную выставь <code class="inline">stock = 1</code> для товара, добавь 2 штуки в корзину —
+        при оформлении должна вернуться ошибка «недостаточно товара», остаток не изменится.
+      </li>
+      <li>
+        <strong>⭐⭐ Полный поток</strong><br>
+        Пройди весь путь: выбрать категорию → открыть товар → в корзину →
+        на checkout выбрать адрес + доставку → оформить →
+        toast «Заказ оформлен!» → страница /orders показывает новый заказ с правильным адресом.
+      </li>
+    </ol>
+  </div>
+</section>
+
+<div class="bottom-nav">
+  <a href="lab_12.html" class="btn-nav">← Лаб. №12</a>
+  <div class="progress-bar">
+    Лаб. работа 13 из 15
+    <div class="progress-dots">
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot active"></div>
+    </div>
+  </div>
+  <a href="lab_14.html" class="btn-nav primary">Лаб. 14 →</a>
+</div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn')
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light')
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая'
+    localStorage.setItem('labTheme', t)
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light')
+  applyTheme(localStorage.getItem('labTheme') || 'dark')
+
+  function selectCat(el) {
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'))
+    el.classList.add('active')
+  }
+</script>
+
+</body>
+</html>

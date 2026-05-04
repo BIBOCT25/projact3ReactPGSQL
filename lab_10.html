@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №10 — Уведомления, бейджи, избранное</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+    --teal: #39d353;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+    --teal: #0f7a42;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0d2137 0%, #1a1040 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #e8d8ff 100%); }
+  .lab-badge { display: inline-block; background: rgba(255,166,87,.15); border: 1px solid rgba(255,166,87,.4); color: var(--orange); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  p { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .tip  { background: rgba(63,185,80,.07);  border-left: 3px solid var(--green);  border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(248,81,73,.07);  border-left: 3px solid var(--red);    border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .tag { color: #7ee787; } .attr { color: #ffa657; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--orange); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  .file-header { display: flex; align-items: center; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--orange); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 8px 0; color: var(--text); font-size: 14.5px; border-bottom: 1px solid var(--border); }
+  .tasks li:last-child { border-bottom: none; }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.next { border-color: var(--orange); color: var(--orange); }
+  .btn-nav.next:hover { background: var(--orange); color: #fff; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+  /* badge demos */
+  .badge-demo { display: inline-flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .bdg { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; color: #fff; }
+  .bdg-hit  { background: #ef4444; }
+  .bdg-new  { background: #3b82f6; }
+  .bdg-sale { background: #10b981; }
+  /* notif demo */
+  .notif-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: .2s; }
+  .notif-item.unread { background: rgba(88,166,255,.1); border: 1px solid rgba(88,166,255,.2); }
+  .notif-item.read   { background: var(--card); border: 1px solid var(--border); opacity: .7; }
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">🔔 Уведомления</div>
+  <h1>№10 — Бейджи, уведомления, избранное</h1>
+  <p>Фичи из README, которых не хватало: бейджи товаров, колокольчик, валидация email, избранное</p>
+  <nav class="nav-labs">
+    <a href="index.html" style="font-size:11px;padding:5px 9px">🏠</a>
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html" class="active">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ЧАСТЬ 1: БЕЙДЖИ ── -->
+  <section>
+    <div class="section-label">Часть 1 — Фича #5</div>
+    <h2>🏷 Бейдж «Хит / Новинка / -20%» на карточке</h2>
+
+    <div class="theory">
+      <strong>Откуда данные:</strong> поле <code class="inline">badgeType: String?</code> в таблице <code class="inline">Product</code>.
+      Значения: <code class="inline">"hit"</code>, <code class="inline">"new"</code>, <code class="inline">"sale"</code> или <code class="inline">null</code>.
+    </div>
+
+    <p>Визуальный результат:</p>
+    <div class="badge-demo">
+      <span class="bdg bdg-hit">Хит</span>
+      <span class="bdg bdg-new">Новинка</span>
+      <span class="bdg bdg-sale">-20%</span>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Компонент ProductBadge.tsx</h4>
+        <div class="file-header"><span>frontend/src/components/ProductBadge.tsx</span></div>
+        <pre><code><span class="cmt">// Конфиг всех возможных бейджей</span>
+<span class="kw">const</span> BADGE_CONFIG: <span class="cls">Record</span>&lt;string, { label: string; color: string }&gt; = {
+  hit:  { label: <span class="str">'Хит'</span>,     color: <span class="str">'#ef4444'</span> },
+  new:  { label: <span class="str">'Новинка'</span>, color: <span class="str">'#3b82f6'</span> },
+  sale: { label: <span class="str">'-20%'</span>,    color: <span class="str">'#10b981'</span> },
+}
+
+<span class="kw">interface</span> <span class="cls">Props</span> { type: string | null }
+
+<span class="kw">export function</span> <span class="fn">ProductBadge</span>({ type }: <span class="cls">Props</span>) {
+  <span class="kw">if</span> (!type || !BADGE_CONFIG[type]) <span class="kw">return null</span>
+  <span class="kw">const</span> { label, color } = BADGE_CONFIG[type]
+  <span class="kw">return</span> (
+    <span class="tag">&lt;span</span> <span class="attr">style</span>={{
+      background:   color,
+      color:        <span class="str">'#fff'</span>,
+      padding:      <span class="str">'2px 8px'</span>,
+      borderRadius: <span class="num">4</span>,
+      fontSize:     <span class="num">12</span>,
+      fontWeight:   <span class="num">600</span>,
+      position:     <span class="str">'absolute'</span>,
+      top:          <span class="num">8</span>,
+      left:         <span class="num">8</span>,
+    }}<span class="tag">&gt;</span>
+      {label}
+    <span class="tag">&lt;/span&gt;</span>
+  )
+}
+</code></pre>
+        <p>Используется внутри <code class="inline">ProductCard</code>:</p>
+        <pre><code><span class="tag">&lt;div</span> <span class="attr">style</span>={{ position: <span class="str">'relative'</span> }}<span class="tag">&gt;</span>
+  <span class="tag">&lt;</span><span class="cls">ProductBadge</span> <span class="attr">type</span>={product.badgeType} <span class="tag">/&gt;</span>
+  <span class="tag">&lt;img</span> <span class="attr">src</span>={product.imageUrl} <span class="attr">alt</span>={product.name} <span class="tag">/&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Заполнить тестовые данные через Prisma Studio</h4>
+        <pre><code><span class="cmt"># Запустить визуальный редактор БД:</span>
+npx prisma studio
+<span class="cmt"># Открыть таблицу Product → установить badgeType = "hit" у нескольких товаров</span></code></pre>
+        <p>Или через seed-скрипт:</p>
+        <pre><code><span class="cmt">// prisma/seed.ts</span>
+<span class="kw">await</span> prisma.product.<span class="fn">updateMany</span>({
+  where: { popularity: { gt: <span class="num">50</span> } },
+  data: { badgeType: <span class="str">'hit'</span> }
+})
+<span class="kw">await</span> prisma.product.<span class="fn">updateMany</span>({
+  where: { createdAt: { gt: <span class="kw">new</span> <span class="fn">Date</span>(<span class="cls">Date</span>.<span class="fn">now</span>() - <span class="num">7</span> * <span class="num">86400000</span>) } },
+  data: { badgeType: <span class="str">'new'</span> }
+})
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 2: ВАЛИДАЦИЯ EMAIL ── -->
+  <section>
+    <div class="section-label">Часть 2 — Фича #16</div>
+    <h2>✉️ Валидация email в реальном времени</h2>
+
+    <div class="theory">
+      <strong>Debounce + БД:</strong> пользователь вводит email → через 400ms после последнего нажатия запрос уходит на сервер → проверяет <code class="inline">users</code> на дубликат.
+      Без debounce — запрос на каждый символ, нагрузка на БД.
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Backend — GET /api/users/check-email</h4>
+        <div class="file-header"><span>backend/src/routes/auth.ts — добавить</span></div>
+        <pre><code>router.<span class="fn">get</span>(<span class="str">'/check-email'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { email } = req.query <span class="kw">as</span> { email: string }
+
+  <span class="cmt">// Базовая валидация — не делаем запрос в БД для явно невалидных значений</span>
+  <span class="kw">if</span> (!email || !email.<span class="fn">includes</span>(<span class="str">'@'</span>))
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'Некорректный email'</span> })
+
+  <span class="kw">const</span> exists = <span class="kw">await</span> prisma.user.<span class="fn">findUnique</span>({ where: { email } })
+  res.<span class="fn">json</span>({ taken: !!exists })
+})
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>React — поле email с проверкой</h4>
+        <div class="file-header"><span>frontend/src/components/EmailField.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Props</span> {
+  value:    string
+  onChange: (v: string) => <span class="kw">void</span>
+}
+
+<span class="kw">export function</span> <span class="fn">EmailField</span>({ value, onChange }: <span class="cls">Props</span>) {
+  <span class="kw">const</span> [taken,   setTaken]   = <span class="fn">useState</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> [checking, setChecking] = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">if</span> (!value.<span class="fn">includes</span>(<span class="str">'@'</span>)) { <span class="fn">setTaken</span>(<span class="kw">false</span>); <span class="kw">return</span> }
+
+    <span class="fn">setChecking</span>(<span class="kw">true</span>)
+    <span class="kw">const</span> timer = <span class="fn">setTimeout</span>(<span class="kw">async</span> () => {
+      <span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/auth/check-email?email=${<span class="fn">encodeURIComponent</span>(value)}`</span>)
+      <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>()
+      <span class="fn">setTaken</span>(data.taken)
+      <span class="fn">setChecking</span>(<span class="kw">false</span>)
+    }, <span class="num">400</span>)                             <span class="cmt">// debounce 400ms</span>
+
+    <span class="kw">return</span> () => <span class="fn">clearTimeout</span>(timer)  <span class="cmt">// отмена предыдущего таймера</span>
+  }, [value])
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;input</span>
+        <span class="attr">type</span>=<span class="str">"email"</span>
+        <span class="attr">value</span>={value}
+        <span class="attr">onChange</span>={e => <span class="fn">onChange</span>(e.target.value)}
+        <span class="attr">style</span>={{ borderColor: taken ? <span class="str">'#ef4444'</span> : <span class="str">''</span> }}
+      <span class="tag">/&gt;</span>
+      {checking &amp;&amp; <span class="tag">&lt;span&gt;</span>Проверяем...<span class="tag">&lt;/span&gt;</span>}
+      {!checking &amp;&amp; taken &amp;&amp;
+        <span class="tag">&lt;span</span> <span class="attr">style</span>={{ color: <span class="str">'#ef4444'</span> }}<span class="tag">&gt;</span>Email уже занят<span class="tag">&lt;/span&gt;</span>
+      }
+      {!checking &amp;&amp; !taken &amp;&amp; value.<span class="fn">includes</span>(<span class="str">'@'</span>) &amp;&amp;
+        <span class="tag">&lt;span</span> <span class="attr">style</span>={{ color: <span class="str">'#10b981'</span> }}<span class="tag">&gt;</span>✓ Email свободен<span class="tag">&lt;/span&gt;</span>
+      }
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <div class="tip">
+          <strong>Паттерн cleanup в useEffect:</strong> функция возврата <code class="inline">return () => clearTimeout(timer)</code> отменяет предыдущий запрос при каждом новом нажатии клавиши. Без этого — запросы «гонятся» и последний может вернуться не последним.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 3: УВЕДОМЛЕНИЯ ── -->
+  <section>
+    <div class="section-label">Часть 3 — Фича #21 + #30</div>
+    <h2>🔔 Колокольчик уведомлений</h2>
+
+    <div class="theory">
+      <strong>Polling vs WebSocket:</strong> для большинства магазинов достаточно polling (проверка каждые 30 сек).
+      WebSocket нужен если уведомления должны приходить в реальном времени (чат, торги).
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Backend — счётчик и список уведомлений</h4>
+        <div class="file-header"><span>backend/src/routes/notifications.ts</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+<span class="kw">import</span> { requireAuth } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+
+<span class="kw">const</span> router = <span class="cls">Router</span>()
+
+<span class="cmt">// GET /api/notifications/unread-count</span>
+router.<span class="fn">get</span>(<span class="str">'/unread-count'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> count = <span class="kw">await</span> prisma.notification.<span class="fn">count</span>({
+    where: { userId: req.userId, readAt: <span class="kw">null</span> }
+  })
+  res.<span class="fn">json</span>({ count })
+})
+
+<span class="cmt">// GET /api/notifications — последние 20</span>
+router.<span class="fn">get</span>(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> items = <span class="kw">await</span> prisma.notification.<span class="fn">findMany</span>({
+    where:   { userId: req.userId },
+    orderBy: { createdAt: <span class="str">'desc'</span> },
+    take:    <span class="num">20</span>
+  })
+  res.<span class="fn">json</span>(items)
+})
+
+<span class="cmt">// PATCH /api/notifications/:id/read — пометить прочитанным</span>
+router.<span class="fn">patch</span>(<span class="str">'/:id/read'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> notif = <span class="kw">await</span> prisma.notification.<span class="fn">findUnique</span>({
+    where: { id: <span class="cls">Number</span>(req.params.id) }
+  })
+  <span class="cmt">// Защита: нельзя читать чужие уведомления</span>
+  <span class="kw">if</span> (!notif || notif.userId !== req.userId)
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">403</span>).<span class="fn">json</span>({ error: <span class="str">'Нет доступа'</span> })
+
+  <span class="kw">const</span> updated = <span class="kw">await</span> prisma.notification.<span class="fn">update</span>({
+    where: { id: <span class="cls">Number</span>(req.params.id) },
+    data:  { readAt: <span class="kw">new</span> <span class="fn">Date</span>() }
+  })
+  res.<span class="fn">json</span>(updated)
+})
+
+<span class="cmt">// PATCH /api/notifications/read-all</span>
+router.<span class="fn">patch</span>(<span class="str">'/read-all'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">await</span> prisma.notification.<span class="fn">updateMany</span>({
+    where: { userId: req.userId, readAt: <span class="kw">null</span> },
+    data:  { readAt: <span class="kw">new</span> <span class="fn">Date</span>() }
+  })
+  res.<span class="fn">json</span>({ ok: <span class="kw">true</span> })
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+        <div class="warn">
+          <strong>Уязвимость IDOR без проверки userId:</strong> всегда проверяй что уведомление принадлежит текущему пользователю. Без проверки любой авторизованный пользователь может прочитать чужие уведомления.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>React — хук useNotifications</h4>
+        <div class="file-header"><span>frontend/src/hooks/useNotifications.ts</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect, useCallback } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Notif</span> {
+  id:        number
+  text:      string
+  readAt:    string | null
+  createdAt: string
+}
+
+<span class="kw">export function</span> <span class="fn">useNotifications</span>() {
+  <span class="kw">const</span> [items,  setItems]  = <span class="fn">useState</span>&lt;<span class="cls">Notif</span>[]&gt;([])
+  <span class="kw">const</span> [unread, setUnread] = <span class="fn">useState</span>(<span class="num">0</span>)
+
+  <span class="kw">const</span> auth = { headers: { <span class="str">'Authorization'</span>: <span class="str">`Bearer ${localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)}`</span> } }
+
+  <span class="kw">const</span> fetchCount = <span class="fn">useCallback</span>(<span class="kw">async</span> () => {
+    <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/notifications/unread-count'</span>, auth).<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+    <span class="fn">setUnread</span>(data.count)
+  }, [])
+
+  <span class="kw">const</span> fetchAll = <span class="fn">useCallback</span>(<span class="kw">async</span> () => {
+    <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/notifications'</span>, auth).<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+    <span class="fn">setItems</span>(data)
+    <span class="fn">setUnread</span>(data.<span class="fn">filter</span>((n: <span class="cls">Notif</span>) => !n.readAt).length)
+  }, [])
+
+  <span class="kw">const</span> markRead = <span class="kw">async</span> (id: number) => {
+    <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/notifications/${id}/read`</span>, { method: <span class="str">'PATCH'</span>, ...auth })
+    <span class="fn">setItems</span>(prev => prev.<span class="fn">map</span>(n => n.id === id ? { ...n, readAt: <span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">toISOString</span>() } : n))
+    <span class="fn">setUnread</span>(u => <span class="cls">Math</span>.<span class="fn">max</span>(<span class="num">0</span>, u - <span class="num">1</span>))
+  }
+
+  <span class="kw">const</span> markAllRead = <span class="kw">async</span> () => {
+    <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/notifications/read-all'</span>, { method: <span class="str">'PATCH'</span>, ...auth })
+    <span class="fn">fetchAll</span>()
+  }
+
+  <span class="cmt">// Polling — каждые 30 секунд</span>
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetchCount</span>()
+    <span class="kw">const</span> id = <span class="fn">setInterval</span>(fetchCount, <span class="num">30_000</span>)
+    <span class="kw">return</span> () => <span class="fn">clearInterval</span>(id)
+  }, [])
+
+  <span class="kw">return</span> { items, unread, fetchAll, markRead, markAllRead }
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>React — компонент NotificationBell</h4>
+        <div class="file-header"><span>frontend/src/components/NotificationBell.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="fn">useNotifications</span> } <span class="kw">from</span> <span class="str">'../hooks/useNotifications'</span>
+
+<span class="kw">export function</span> <span class="fn">NotificationBell</span>() {
+  <span class="kw">const</span> { items, unread, fetchAll, markRead, markAllRead } = <span class="fn">useNotifications</span>()
+  <span class="kw">const</span> [open, setOpen] = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="kw">const</span> toggle = () => {
+    <span class="kw">if</span> (!open) <span class="fn">fetchAll</span>()   <span class="cmt">// загрузить список при открытии</span>
+    <span class="fn">setOpen</span>(!open)
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">style</span>={{ position: <span class="str">'relative'</span> }}<span class="tag">&gt;</span>
+
+      {<span class="cmt">/* Кнопка колокольчика с бейджем */</span>}
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={toggle} <span class="attr">style</span>={{ fontSize: <span class="num">22</span>, background: <span class="str">'none'</span>, border: <span class="str">'none'</span>, cursor: <span class="str">'pointer'</span>, position: <span class="str">'relative'</span> }}<span class="tag">&gt;</span>
+        🔔
+        {unread &gt; <span class="num">0</span> &amp;&amp; (
+          <span class="tag">&lt;span</span> <span class="attr">style</span>={{
+            position: <span class="str">'absolute'</span>, top: <span class="num">-6</span>, right: <span class="num">-8</span>,
+            background: <span class="str">'#ef4444'</span>, color: <span class="str">'#fff'</span>,
+            borderRadius: <span class="str">'50%'</span>, width: <span class="num">18</span>, height: <span class="num">18</span>,
+            display: <span class="str">'flex'</span>, alignItems: <span class="str">'center'</span>, justifyContent: <span class="str">'center'</span>,
+            fontSize: <span class="num">11</span>, fontWeight: <span class="str">'bold'</span>
+          }}<span class="tag">&gt;</span>
+            {unread &gt; <span class="num">9</span> ? <span class="str">'9+'</span> : unread}
+          <span class="tag">&lt;/span&gt;</span>
+        )}
+      <span class="tag">&lt;/button&gt;</span>
+
+      {<span class="cmt">/* Выпадающий список */</span>}
+      {open &amp;&amp; (
+        <span class="tag">&lt;div</span> <span class="attr">style</span>={{ position: <span class="str">'absolute'</span>, right: <span class="num">0</span>, top: <span class="str">'100%'</span>, width: <span class="num">300</span>, background: <span class="str">'#1c2230'</span>, border: <span class="str">'1px solid #30363d'</span>, borderRadius: <span class="num">8</span>, zIndex: <span class="num">100</span> }}<span class="tag">&gt;</span>
+          <span class="tag">&lt;div</span> <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, justifyContent: <span class="str">'space-between'</span>, padding: <span class="str">'10px 14px'</span>, borderBottom: <span class="str">'1px solid #30363d'</span> }}<span class="tag">&gt;</span>
+            <span class="tag">&lt;strong&gt;</span>Уведомления<span class="tag">&lt;/strong&gt;</span>
+            {unread &gt; <span class="num">0</span> &amp;&amp; <span class="tag">&lt;button</span> <span class="attr">onClick</span>={markAllRead}<span class="tag">&gt;</span>Прочитать все<span class="tag">&lt;/button&gt;</span>}
+          <span class="tag">&lt;/div&gt;</span>
+          {items.<span class="fn">map</span>(n => (
+            <span class="tag">&lt;div</span>
+              <span class="attr">key</span>={n.id}
+              <span class="attr">onClick</span>={() => !n.readAt &amp;&amp; <span class="fn">markRead</span>(n.id)}
+              <span class="attr">style</span>={{ padding: <span class="str">'10px 14px'</span>, background: n.readAt ? <span class="str">'transparent'</span> : <span class="str">'rgba(88,166,255,.1)'</span>, cursor: n.readAt ? <span class="str">'default'</span> : <span class="str">'pointer'</span>, borderBottom: <span class="str">'1px solid #30363d'</span> }}
+            <span class="tag">&gt;</span>
+              {!n.readAt &amp;&amp; <span class="tag">&lt;span</span> <span class="attr">style</span>={{ display: <span class="str">'inline-block'</span>, width: <span class="num">8</span>, height: <span class="num">8</span>, borderRadius: <span class="str">'50%'</span>, background: <span class="str">'#58a6ff'</span>, marginRight: <span class="num">8</span> }}<span class="tag">/&gt;</span>}
+              {n.text}
+            <span class="tag">&lt;/div&gt;</span>
+          ))}
+          {!items.length &amp;&amp; <span class="tag">&lt;p</span> <span class="attr">style</span>={{ padding: <span class="num">14</span>, color: <span class="str">'#8b949e'</span> }}<span class="tag">&gt;</span>Нет уведомлений<span class="tag">&lt;/p&gt;</span>}
+        <span class="tag">&lt;/div&gt;</span>
+      )}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 4: ИЗБРАННОЕ ── -->
+  <section>
+    <div class="section-label">Часть 4 — Фича #34</div>
+    <h2>♡ Избранное — полная реализация</h2>
+
+    <div class="theory">
+      <strong>Оптимистичное обновление:</strong> UI меняется мгновенно (♡ → ♥), не дожидаясь ответа сервера.
+      Если запрос упал — откатываем. Пользователь не видит задержки.
+    </div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h4>Backend — toggle + список избранного</h4>
+        <div class="file-header"><span>backend/src/routes/favorites.ts</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">Router</span> } <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma } <span class="kw">from</span> <span class="str">'../index'</span>
+<span class="kw">import</span> { requireAuth } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+
+<span class="kw">const</span> router = <span class="cls">Router</span>()
+
+<span class="cmt">// GET /api/favorites — список избранных товаров</span>
+router.<span class="fn">get</span>(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> favs = <span class="kw">await</span> prisma.favorite.<span class="fn">findMany</span>({
+    where:   { userId: req.userId },
+    include: { product: <span class="kw">true</span> }
+  })
+  res.<span class="fn">json</span>(favs.<span class="fn">map</span>(f => f.product))
+})
+
+<span class="cmt">// POST /api/favorites/toggle</span>
+router.<span class="fn">post</span>(<span class="str">'/toggle'</span>, requireAuth, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { productId } = req.body
+
+  <span class="kw">const</span> existing = <span class="kw">await</span> prisma.favorite.<span class="fn">findUnique</span>({
+    where: { userId_productId: { userId: req.userId!, productId } }
+  })
+
+  <span class="kw">if</span> (existing) {
+    <span class="kw">await</span> prisma.favorite.<span class="fn">delete</span>({ where: { id: existing.id } })
+    res.<span class="fn">json</span>({ favorited: <span class="kw">false</span> })
+  } <span class="kw">else</span> {
+    <span class="kw">await</span> prisma.favorite.<span class="fn">create</span>({ data: { userId: req.userId!, productId } })
+    res.<span class="fn">json</span>({ favorited: <span class="kw">true</span> })
+  }
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-body">
+        <h4>React — FavoriteButton с оптимистичным обновлением</h4>
+        <div class="file-header"><span>frontend/src/components/FavoriteButton.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Props</span> {
+  productId:        number
+  initialFavorited: boolean
+}
+
+<span class="kw">export function</span> <span class="fn">FavoriteButton</span>({ productId, initialFavorited }: <span class="cls">Props</span>) {
+  <span class="kw">const</span> [favorited, setFavorited] = <span class="fn">useState</span>(initialFavorited)
+  <span class="kw">const</span> [loading,   setLoading]   = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="kw">const</span> toggle = <span class="kw">async</span> () => {
+    <span class="kw">if</span> (loading) <span class="kw">return</span>
+    <span class="kw">const</span> prev = favorited
+
+    <span class="cmt">// Оптимистичное обновление — меняем немедленно</span>
+    <span class="fn">setFavorited</span>(!favorited)
+    <span class="fn">setLoading</span>(<span class="kw">true</span>)
+
+    <span class="kw">try</span> {
+      <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/favorites/toggle'</span>, {
+        method:  <span class="str">'POST'</span>,
+        headers: {
+          <span class="str">'Content-Type'</span>:  <span class="str">'application/json'</span>,
+          <span class="str">'Authorization'</span>: <span class="str">`Bearer ${localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)}`</span>
+        },
+        body: <span class="cls">JSON</span>.<span class="fn">stringify</span>({ productId })
+      })
+      <span class="kw">if</span> (!res.ok) <span class="fn">setFavorited</span>(prev)  <span class="cmt">// откат при ошибке</span>
+    } <span class="kw">catch</span> {
+      <span class="fn">setFavorited</span>(prev)              <span class="cmt">// откат при сетевой ошибке</span>
+    } <span class="kw">finally</span> {
+      <span class="fn">setLoading</span>(<span class="kw">false</span>)
+    }
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;button</span>
+      <span class="attr">onClick</span>={toggle}
+      <span class="attr">disabled</span>={loading}
+      <span class="attr">style</span>={{
+        fontSize:   <span class="num">22</span>,
+        background: <span class="str">'none'</span>,
+        border:     <span class="str">'none'</span>,
+        cursor:     <span class="str">'pointer'</span>,
+        color:      favorited ? <span class="str">'#ef4444'</span> : <span class="str">'#8b949e'</span>,
+        transition: <span class="str">'color .2s'</span>
+      }}
+    <span class="tag">&gt;</span>
+      {favorited ? <span class="str">'♥'</span> : <span class="str">'♡'</span>}
+    <span class="tag">&lt;/button&gt;</span>
+  )
+}
+</code></pre>
+        <p>Для показа начального состояния — передай <code class="inline">initialFavorited</code> из данных API (загрузи вместе с товаром через join):</p>
+        <pre><code><span class="cmt">// backend: при загрузке товаров для авторизованного пользователя</span>
+<span class="kw">const</span> products = <span class="kw">await</span> prisma.product.<span class="fn">findMany</span>({
+  include: {
+    favorites: { where: { userId: req.userId } }   <span class="cmt">// только текущий user</span>
+  }
+})
+
+<span class="cmt">// Добавляем флаг в ответ:</span>
+.<span class="fn">map</span>(p => ({ ...p, isFavorited: p.favorites.length &gt; <span class="num">0</span> }))
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 5: «УВЕДОМИТЬ О НАЛИЧИИ» ── -->
+  <section>
+    <div class="section-label">Часть 5 — Фича #3</div>
+    <h2>📬 «Уведомить о наличии» — форма</h2>
+
+    <div class="step">
+      <div class="step-num">10</div>
+      <div class="step-body">
+        <h4>NotifyStock.tsx — компонент формы</h4>
+        <div class="file-header"><span>frontend/src/components/NotifyStock.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">export function</span> <span class="fn">NotifyStock</span>({ productId }: { productId: number }) {
+  <span class="kw">const</span> [show,  setShow]  = <span class="fn">useState</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> [email, setEmail] = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [sent,  setSent]  = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="kw">const</span> submit = <span class="kw">async</span> () => {
+    <span class="kw">if</span> (!email.<span class="fn">includes</span>(<span class="str">'@'</span>)) <span class="kw">return</span>
+    <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/notify-stock'</span>, {
+      method:  <span class="str">'POST'</span>,
+      headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+      body:    <span class="cls">JSON</span>.<span class="fn">stringify</span>({ email, productId })
+    })
+    <span class="fn">setSent</span>(<span class="kw">true</span>)
+  }
+
+  <span class="kw">if</span> (sent) <span class="kw">return</span> <span class="tag">&lt;p</span> <span class="attr">style</span>={{ color: <span class="str">'#3fb950'</span> }}<span class="tag">&gt;</span>✅ Уведомим, когда появится<span class="tag">&lt;/p&gt;</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={() => <span class="fn">setShow</span>(!show)}<span class="tag">&gt;</span>
+        🔔 Уведомить о наличии
+      <span class="tag">&lt;/button&gt;</span>
+      {show &amp;&amp; (
+        <span class="tag">&lt;div</span> <span class="attr">style</span>={{ display: <span class="str">'flex'</span>, gap: <span class="num">8</span>, marginTop: <span class="num">8</span> }}<span class="tag">&gt;</span>
+          <span class="tag">&lt;input</span>
+            <span class="attr">type</span>=<span class="str">"email"</span>
+            <span class="attr">value</span>={email}
+            <span class="attr">onChange</span>={e => <span class="fn">setEmail</span>(e.target.value)}
+            <span class="attr">placeholder</span>=<span class="str">"Ваш email"</span>
+          <span class="tag">/&gt;</span>
+          <span class="tag">&lt;button</span> <span class="attr">onClick</span>={submit}<span class="tag">&gt;</span>Отправить<span class="tag">&lt;/button&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+      )}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <div class="file-header"><span>backend/src/routes/products.ts — добавить роут</span></div>
+        <pre><code>router.<span class="fn">post</span>(<span class="str">'/notify-stock'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { email, productId } = req.body
+  <span class="kw">if</span> (!email || !productId)
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'email и productId обязательны'</span> })
+
+  <span class="kw">await</span> prisma.emailLog.<span class="fn">create</span>({
+    data: { email, type: <span class="str">`stock_notify_${productId}`</span> }
+  })
+  res.<span class="fn">json</span>({ ok: <span class="kw">true</span> })
+})
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>
+          <strong>Бейджи товаров</strong><br>
+          Добавь <code class="inline">ProductBadge</code> в <code class="inline">ProductCard</code>. Открой Prisma Studio и задай нескольким товарам <code class="inline">badgeType = "hit"</code>. Убедись, что бейдж отображается на карточке.
+        </li>
+        <li>
+          <strong>Валидация email с debounce</strong><br>
+          Добавь роут <code class="inline">GET /api/auth/check-email</code>. Встрой <code class="inline">EmailField</code> в форму регистрации вместо обычного <code class="inline">&lt;input&gt;</code>. Зарегистрируй пользователя, потом попробуй тот же email — должно показать «Email уже занят».
+        </li>
+        <li>
+          <strong>Колокольчик уведомлений</strong><br>
+          Добавь <code class="inline">NotificationBell</code> в шапку. После оформления заказа (лаб. 9) — должно появиться уведомление с бейджем. Клик по уведомлению — снимает бейдж.
+        </li>
+        <li>
+          <strong>⭐ Избранное</strong><br>
+          Добавь <code class="inline">FavoriteButton</code> на карточку. Сделай страницу <code class="inline">/favorites</code> которая показывает товары через <code class="inline">GET /api/favorites</code>. Добавь ссылку «Избранное» в шапку.
+        </li>
+        <li>
+          <strong>⭐ Синхронизация темы в PostgreSQL</strong><br>
+          Обнови <code class="inline">ThemeToggle</code> (из лаб. 7): при смене темы отправляй <code class="inline">PATCH /api/user/settings/theme</code>. При загрузке страницы — читай тему из <code class="inline">GET /api/user/settings</code> вместо только <code class="inline">localStorage</code>.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_09.html" class="btn-nav">← Лаб. №9</a>
+    <div class="progress-bar">
+      Лаб. работа 10 из 11
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_11.html" class="btn-nav next">Лаб. №11 →</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>

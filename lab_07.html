@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №7 — UX-фичи</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0d2137 0%, #0a3d62 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #b8d8f8 100%); }
+  .lab-badge { display: inline-block; background: rgba(88,166,255,.15); border: 1px solid rgba(88,166,255,.4); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  p { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .tip { background: rgba(63,185,80,.07); border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(210,153,34,.07); border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .important { background: rgba(248,81,73,.07); border-left: 3px solid var(--red); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .tag { color: #7ee787; } .attr { color: #ffa657; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  .file-header { display: flex; align-items: center; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--accent); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  /* Демо таймер */
+  .demo-timer { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+  .timer-block { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; text-align: center; min-width: 70px; }
+  .timer-num { font-size: 32px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .timer-label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-top: 2px; }
+  /* Демо уведомления */
+  .demo-notif { position: relative; display: inline-block; margin-bottom: 20px; }
+  .demo-notif-icon { font-size: 28px; }
+  .notif-badge { position: absolute; top: -4px; right: -8px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+  /* Демо тема */
+  .demo-theme-row { display: flex; gap: 12px; margin-bottom: 20px; }
+  .theme-card { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 14px 20px; font-size: 14px; flex: 1; text-align: center; cursor: default; }
+  .theme-card.active-theme { border-color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .ref-table-wrap { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; }
+  .ref-table-wrap table { margin: 0; }
+  .ref-table-wrap th { position: sticky; top: 0; z-index: 1; }
+  .cat-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .cat-Кнопки      { background: rgba(88,166,255,.15); color: #58a6ff; }
+  .cat-Карточки    { background: rgba(188,140,255,.15); color: #bc8cff; }
+  .cat-Фильтры     { background: rgba(210,153,34,.15);  color: #d29922; }
+  .cat-Корзина     { background: rgba(63,185,80,.15);   color: #3fb950; }
+  .cat-Таймеры     { background: rgba(248,81,73,.15);   color: #f85149; }
+  .cat-Формы       { background: rgba(255,166,87,.15);  color: #ffa657; }
+  .cat-Навигация   { background: rgba(88,166,255,.12);  color: #79c0ff; }
+  .cat-Слайдеры    { background: rgba(188,140,255,.12); color: #d2a8ff; }
+  .cat-Уведомления { background: rgba(63,185,80,.12);   color: #56d364; }
+  .cat-UX-мелочи   { background: rgba(255,166,87,.12);  color: #ffa657; }
+  .cat-FAQ         { background: rgba(210,153,34,.12);  color: #e3b341; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 6px 0; color: var(--text); font-size: 14.5px; }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--accent); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">Лабораторная работа</div>
+  <h1>№7 — UX-фичи</h1>
+  <p>Таймер обратного отсчёта, бейдж уведомлений, тёмная тема сохраняется в PostgreSQL</p>
+  <nav class="nav-labs">
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html" class="active">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ЦЕЛЬ ── -->
+  <section>
+    <div class="section-label">Цель работы</div>
+    <h2>🎯 Что мы сделаем</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--green)">✅ В итоге получим</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li>Таймер «до конца акции» (дни, часы, минуты, секунды)</li>
+          <li>Красный бейдж на иконке уведомлений</li>
+          <li>Тёмная/светлая тема сохраняется в БД</li>
+          <li>Тема восстанавливается при следующем входе</li>
+          <li>Хук <code class="inline">useCountdown</code></li>
+          <li>Хук <code class="inline">useNotifications</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--accent)">🔑 Новые понятия</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li><strong>setInterval</strong> — повторяющийся таймер в useEffect</li>
+          <li><strong>clearInterval</strong> — очистка таймера при размонтировании</li>
+          <li><strong>UserSettings</strong> — персональные настройки в Prisma</li>
+          <li><strong>Date.now()</strong> — текущее время в миллисекундах</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 1: ТАЙМЕР ── -->
+  <section>
+    <div class="section-label">Часть 1</div>
+    <h2>⏱️ Таймер обратного отсчёта</h2>
+
+    <h3>Так будет выглядеть</h3>
+    <div class="demo-timer">
+      <div class="timer-block"><div class="timer-num">02</div><div class="timer-label">Дни</div></div>
+      <div class="timer-block"><div class="timer-num">07</div><div class="timer-label">Часы</div></div>
+      <div class="timer-block"><div class="timer-num">34</div><div class="timer-label">Мин</div></div>
+      <div class="timer-block"><div class="timer-num">18</div><div class="timer-label">Сек</div></div>
+    </div>
+
+    <div class="theory">
+      <strong>setInterval в useEffect</strong> — стандартный паттерн для таймеров в React.<br>
+      Важно: <em>всегда</em> возвращать функцию очистки, иначе таймер продолжит работать
+      после того как компонент удалён со страницы (утечка памяти).
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Хук useCountdown</h4>
+        <div class="file-header"><span>frontend/src/hooks/useCountdown.ts</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">TimeLeft</span> {
+  days:    number
+  hours:   number
+  minutes: number
+  seconds: number
+  expired: boolean
+}
+
+<span class="kw">export function</span> <span class="fn">useCountdown</span>(targetDate: <span class="cls">Date</span>): <span class="cls">TimeLeft</span> {
+  <span class="kw">const</span> <span class="fn">calc</span> = (): <span class="cls">TimeLeft</span> =&gt; {
+    <span class="kw">const</span> diff = targetDate.<span class="fn">getTime</span>() - <span class="cls">Date</span>.<span class="fn">now</span>()
+    <span class="cmt">// Date.now() — миллисекунды с 1 января 1970 (unix timestamp)</span>
+    <span class="cmt">// targetDate.getTime() — то же самое для целевой даты</span>
+    <span class="cmt">// diff = сколько миллисекунд осталось</span>
+
+    <span class="kw">if</span> (diff &lt;= <span class="num">0</span>) <span class="kw">return</span> { days: <span class="num">0</span>, hours: <span class="num">0</span>, minutes: <span class="num">0</span>, seconds: <span class="num">0</span>, expired: <span class="kw">true</span> }
+
+    <span class="kw">return</span> {
+      days:    <span class="cls">Math</span>.<span class="fn">floor</span>(diff / (<span class="num">1000</span> * <span class="num">60</span> * <span class="num">60</span> * <span class="num">24</span>)),
+      hours:   <span class="cls">Math</span>.<span class="fn">floor</span>(diff / (<span class="num">1000</span> * <span class="num">60</span> * <span class="num">60</span>) % <span class="num">24</span>),
+      minutes: <span class="cls">Math</span>.<span class="fn">floor</span>(diff / (<span class="num">1000</span> * <span class="num">60</span>) % <span class="num">60</span>),
+      seconds: <span class="cls">Math</span>.<span class="fn">floor</span>(diff / <span class="num">1000</span> % <span class="num">60</span>),
+      expired: <span class="kw">false</span>
+    }
+    <span class="cmt">// 1000 мс = 1 сек, × 60 = 1 мин, × 60 = 1 час, × 24 = 1 день
+    // % 24 — остаток от деления: часы в рамках одних суток</span>
+  }
+
+  <span class="kw">const</span> [timeLeft, setTimeLeft] = <span class="fn">useState</span>&lt;<span class="cls">TimeLeft</span>&gt;(<span class="fn">calc</span>)
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="cmt">// setInterval вызывает функцию каждые 1000 мс (1 секунда)</span>
+    <span class="kw">const</span> id = <span class="fn">setInterval</span>(() =&gt; {
+      <span class="fn">setTimeLeft</span>(<span class="fn">calc</span>())
+    }, <span class="num">1000</span>)
+
+    <span class="cmt">// Функция очистки — вызывается при размонтировании компонента
+    // Без clearInterval таймер продолжит тикать и обновлять unmounted компонент</span>
+    <span class="kw">return</span> () =&gt; <span class="fn">clearInterval</span>(id)
+  }, [targetDate])             <span class="cmt">// зависимость: если дата изменится — перезапустить</span>
+
+  <span class="kw">return</span> timeLeft
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Компонент CountdownBanner</h4>
+        <div class="file-header"><span>frontend/src/components/CountdownBanner.tsx</span></div>
+        <pre><code><span class="kw">import</span> { <span class="fn">useCountdown</span> } <span class="kw">from</span> <span class="str">'../hooks/useCountdown'</span>
+
+<span class="kw">const</span> SALE_END = <span class="kw">new</span> <span class="cls">Date</span>(<span class="str">'2026-06-01T00:00:00'</span>)  <span class="cmt">// дата окончания акции</span>
+
+<span class="kw">export function</span> <span class="fn">CountdownBanner</span>() {
+  <span class="kw">const</span> { days, hours, minutes, seconds, expired } = <span class="fn">useCountdown</span>(SALE_END)
+
+  <span class="kw">if</span> (expired) <span class="kw">return</span> <span class="kw">null</span>  <span class="cmt">// не показывать когда акция закончилась</span>
+
+  <span class="kw">const</span> <span class="fn">pad</span> = (n: number) =&gt; n.<span class="fn">toString</span>().<span class="fn">padStart</span>(<span class="num">2</span>, <span class="str">'0'</span>)
+  <span class="cmt">// padStart(2, '0') — добавить ведущий ноль: 7 → "07"</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"sale-banner"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;span&gt;</span>🔥 Скидки до 30% — акция заканчивается:<span class="tag">&lt;/span&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"timer"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"timer-block"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-num"</span><span class="tag">&gt;</span>{<span class="fn">pad</span>(days)}<span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-label"</span><span class="tag">&gt;</span>дн<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"timer-block"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-num"</span><span class="tag">&gt;</span>{<span class="fn">pad</span>(hours)}<span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-label"</span><span class="tag">&gt;</span>ч<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"timer-block"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-num"</span><span class="tag">&gt;</span>{<span class="fn">pad</span>(minutes)}<span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-label"</span><span class="tag">&gt;</span>мин<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"timer-block"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-num"</span><span class="tag">&gt;</span>{<span class="fn">pad</span>(seconds)}<span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"timer-label"</span><span class="tag">&gt;</span>сек<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <div class="tip">
+          <strong>💡 Почему каждую секунду перерисовывается только таймер?</strong><br>
+          React сравнивает предыдущий и новый Virtual DOM.
+          Изменились только числа внутри <code class="inline">.timer-num</code> —
+          именно эти 4 элемента и обновляются в реальном DOM. Всё остальное не трогается.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 2: УВЕДОМЛЕНИЯ ── -->
+  <section>
+    <div class="section-label">Часть 2</div>
+    <h2>🔔 Бейдж уведомлений</h2>
+
+    <h3>Как будет выглядеть</h3>
+    <div class="demo-notif">
+      <span class="demo-notif-icon">🔔</span>
+      <span class="notif-badge">3</span>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Хук useNotifications</h4>
+        <p>Хук периодически проверяет сервер на новые уведомления с помощью polling.</p>
+        <div class="file-header"><span>frontend/src/hooks/useNotifications.ts</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect, useCallback } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">interface</span> <span class="cls">Notification</span> {
+  id:      number
+  message: string
+  read:    boolean
+}
+
+<span class="kw">export function</span> <span class="fn">useNotifications</span>() {
+  <span class="kw">const</span> [items,   setItems]   = <span class="fn">useState</span>&lt;<span class="cls">Notification</span>[]&gt;([])
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>)
+
+  <span class="kw">const</span> fetch_notifs = <span class="fn">useCallback</span>(<span class="kw">async</span> () =&gt; {
+    <span class="kw">const</span> token = localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)
+    <span class="kw">if</span> (!token) <span class="kw">return</span>
+    <span class="kw">try</span> {
+      <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/notifications'</span>, {
+        headers: { <span class="str">'Authorization'</span>: <span class="str">`Bearer ${token}`</span> }
+      })
+      <span class="kw">if</span> (res.ok) <span class="fn">setItems</span>(<span class="kw">await</span> res.<span class="fn">json</span>())
+    } <span class="kw">finally</span> {
+      <span class="fn">setLoading</span>(<span class="kw">false</span>)
+    }
+  }, [])
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetch_notifs</span>()                       <span class="cmt">// первая загрузка</span>
+
+    <span class="cmt">// Polling: проверять каждые 30 секунд</span>
+    <span class="kw">const</span> id = <span class="fn">setInterval</span>(fetch_notifs, <span class="num">30_000</span>)
+    <span class="kw">return</span> () =&gt; <span class="fn">clearInterval</span>(id)     <span class="cmt">// очистить при unmount</span>
+  }, [fetch_notifs])
+
+  <span class="cmt">// Пометить все как прочитанные</span>
+  <span class="kw">const</span> markAllRead = <span class="kw">async</span> () =&gt; {
+    <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/notifications/read-all'</span>, {
+      method:  <span class="str">'PATCH'</span>,
+      headers: { <span class="str">'Authorization'</span>: <span class="str">`Bearer ${localStorage.getItem('token')}`</span> }
+    })
+    <span class="fn">setItems</span>(prev =&gt; prev.<span class="fn">map</span>(n =&gt; ({ ...n, read: <span class="kw">true</span> })))  <span class="cmt">// optimistic</span>
+  }
+
+  <span class="kw">const</span> unreadCount = items.<span class="fn">filter</span>(n =&gt; !n.read).length
+
+  <span class="kw">return</span> { items, loading, unreadCount, markAllRead }
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Компонент NotificationBell</h4>
+        <div class="file-header"><span>frontend/src/components/NotificationBell.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="fn">useNotifications</span> } <span class="kw">from</span> <span class="str">'../hooks/useNotifications'</span>
+
+<span class="kw">export function</span> <span class="fn">NotificationBell</span>() {
+  <span class="kw">const</span> { items, unreadCount, markAllRead } = <span class="fn">useNotifications</span>()
+  <span class="kw">const</span> [open, setOpen] = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="kw">const</span> handleOpen = () =&gt; {
+    <span class="fn">setOpen</span>(v =&gt; !v)
+    <span class="kw">if</span> (unreadCount &gt; <span class="num">0</span>) <span class="fn">markAllRead</span>()
+  }
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"notif-wrap"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">className</span>=<span class="str">"notif-btn"</span> <span class="attr">onClick</span>={handleOpen}<span class="tag">&gt;</span>
+        🔔
+        {unreadCount &gt; <span class="num">0</span> &amp;&amp; (
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"notif-badge"</span><span class="tag">&gt;</span>
+            {unreadCount &gt; <span class="num">9</span> ? <span class="str">'9+'</span> : unreadCount}
+            <span class="cmt">{'// 9+ если больше 9, чтобы бейдж не переполнялся'}</span>
+          <span class="tag">&lt;/span&gt;</span>
+        )}
+      <span class="tag">&lt;/button&gt;</span>
+
+      {open &amp;&amp; (
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"notif-dropdown"</span><span class="tag">&gt;</span>
+          {items.length === <span class="num">0</span>
+            ? <span class="tag">&lt;p</span> <span class="attr">className</span>=<span class="str">"notif-empty"</span><span class="tag">&gt;</span>Нет уведомлений<span class="tag">&lt;/p&gt;</span>
+            : items.<span class="fn">map</span>(n =&gt; (
+                <span class="tag">&lt;div</span> <span class="attr">key</span>={n.id} <span class="attr">className</span>={<span class="str">`notif-item ${n.read ? 'read' : 'unread'}`</span>}<span class="tag">&gt;</span>
+                  {n.message}
+                <span class="tag">&lt;/div&gt;</span>
+              ))
+          }
+        <span class="tag">&lt;/div&gt;</span>
+      )}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+        <div class="file-header"><span>backend/src/routes/notifications.ts — минимальный роут</span></div>
+        <pre><code><span class="kw">import</span> { Router }      <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma }      <span class="kw">from</span> <span class="str">'../index'</span>
+<span class="kw">import</span> { requireAuth } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+
+<span class="kw">const</span> router = <span class="fn">Router</span>()
+
+router.get(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> items = <span class="kw">await</span> prisma.notification.<span class="fn">findMany</span>({
+    where:   { userId: req.userId },
+    orderBy: { createdAt: <span class="str">'desc'</span> },
+    take:    <span class="num">20</span>         <span class="cmt">// не больше 20 последних</span>
+  })
+  res.<span class="fn">json</span>(items)
+})
+
+router.patch(<span class="str">'/read-all'</span>, requireAuth, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">await</span> prisma.notification.<span class="fn">updateMany</span>({
+    where:  { userId: req.userId, read: <span class="kw">false</span> },
+    data:   { read: <span class="kw">true</span> }
+  })
+  res.<span class="fn">json</span>({ ok: <span class="kw">true</span> })
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+        <div class="file-header"><span>prisma/schema.prisma — модель Notification</span></div>
+        <pre><code>model Notification {
+  id        Int      @id @default(autoincrement())
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЧАСТЬ 3: ТЕМА В БД ── -->
+  <section>
+    <div class="section-label">Часть 3</div>
+    <h2>🌙 Тёмная тема, сохранённая в PostgreSQL</h2>
+
+    <h3>Как это отличается от localStorage</h3>
+    <div class="demo-theme-row">
+      <div class="theme-card active-theme">🌙 Тёмная<br><small style="color:var(--text-muted)">текущая</small></div>
+      <div class="theme-card">☀️ Светлая</div>
+    </div>
+
+    <div class="card">
+      <table>
+        <tr><th></th><th>localStorage</th><th>PostgreSQL</th></tr>
+        <tr>
+          <td><strong>Где хранится</strong></td>
+          <td>В браузере пользователя</td>
+          <td>На сервере, в БД</td>
+        </tr>
+        <tr>
+          <td><strong>Синхронизация</strong></td>
+          <td>Только на этом устройстве</td>
+          <td>На всех устройствах</td>
+        </tr>
+        <tr>
+          <td><strong>После смены браузера</strong></td>
+          <td>Настройки потеряны</td>
+          <td>Настройки сохранены</td>
+        </tr>
+        <tr>
+          <td><strong>Сложность</strong></td>
+          <td>1 строка кода</td>
+          <td>Модель + API + хук</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Модель UserSettings в Prisma</h4>
+        <div class="file-header"><span>prisma/schema.prisma — добавить</span></div>
+        <pre><code>model UserSettings {
+  id     Int    @id @default(autoincrement())
+  userId Int    @unique        <span class="cmt">// @unique — у каждого пользователя одна запись</span>
+  theme  String @default(<span class="str">"dark"</span>)  <span class="cmt">// "dark" | "light"</span>
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+<span class="cmt">// В User добавить обратную связь:</span>
+model User {
+  <span class="cmt">// ... существующие поля ...</span>
+  settings UserSettings?   <span class="cmt">// ? — настройки могут отсутствовать (ещё не созданы)</span>
+}
+</code></pre>
+        <pre><code>npx prisma migrate dev --name add-user-settings
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Роут для настроек</h4>
+        <div class="file-header"><span>backend/src/routes/settings.ts</span></div>
+        <pre><code><span class="kw">import</span> { Router }      <span class="kw">from</span> <span class="str">'express'</span>
+<span class="kw">import</span> { prisma }      <span class="kw">from</span> <span class="str">'../index'</span>
+<span class="kw">import</span> { requireAuth } <span class="kw">from</span> <span class="str">'../middleware/auth'</span>
+
+<span class="kw">const</span> router = <span class="fn">Router</span>()
+
+<span class="cmt">// GET /api/settings — получить настройки текущего пользователя</span>
+router.get(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> settings = <span class="kw">await</span> prisma.userSettings.<span class="fn">findUnique</span>({
+    where: { userId: req.userId }
+  })
+  <span class="cmt">// Если записи нет — вернуть дефолтные настройки</span>
+  res.json(settings ?? { theme: <span class="str">'dark'</span> })
+})
+
+<span class="cmt">// PATCH /api/settings — обновить настройки</span>
+router.patch(<span class="str">'/'</span>, requireAuth, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> { theme } = req.body
+
+  <span class="kw">if</span> (![ <span class="str">'dark'</span>, <span class="str">'light'</span> ].<span class="fn">includes</span>(theme)) {
+    <span class="kw">return</span> res.status(<span class="num">400</span>).json({ error: <span class="str">'theme должен быть dark или light'</span> })
+  }
+
+  <span class="cmt">// upsert: создать если нет, обновить если есть</span>
+  <span class="kw">const</span> result = <span class="kw">await</span> prisma.userSettings.<span class="fn">upsert</span>({
+    where:  { userId: req.userId! },
+    update: { theme },
+    create: { userId: req.userId!, theme }
+  })
+
+  res.json(result)
+})
+
+<span class="kw">export default</span> router
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>Хук useTheme — синхронизация с сервером</h4>
+        <div class="file-header"><span>frontend/src/hooks/useTheme.ts</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">type</span> Theme = <span class="str">'dark'</span> | <span class="str">'light'</span>
+
+<span class="kw">export function</span> <span class="fn">useTheme</span>() {
+  <span class="cmt">// Начинаем с localStorage — быстро, без задержки сервера</span>
+  <span class="kw">const</span> [theme, setTheme] = <span class="fn">useState</span>&lt;Theme&gt;(
+    (localStorage.<span class="fn">getItem</span>(<span class="str">'theme'</span>) <span class="kw">as</span> Theme) ?? <span class="str">'dark'</span>
+  )
+
+  <span class="cmt">// При монтировании загрузить тему с сервера (если пользователь вошёл)</span>
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="kw">const</span> token = localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)
+    <span class="kw">if</span> (!token) <span class="kw">return</span>
+
+    <span class="fn">fetch</span>(<span class="str">'/api/settings'</span>, {
+      headers: { <span class="str">'Authorization'</span>: <span class="str">`Bearer ${token}`</span> }
+    })
+      .<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(data =&gt; {
+        <span class="fn">applyTheme</span>(data.theme)   <span class="cmt">// перетереть localStorage-значение серверным</span>
+      })
+  }, [])
+
+  <span class="kw">const</span> applyTheme = (t: Theme) =&gt; {
+    document.documentElement.<span class="fn">setAttribute</span>(<span class="str">'data-theme'</span>, t)
+    localStorage.<span class="fn">setItem</span>(<span class="str">'theme'</span>, t)
+    <span class="fn">setTheme</span>(t)
+  }
+
+  <span class="kw">const</span> toggle = <span class="kw">async</span> () =&gt; {
+    <span class="kw">const</span> next: Theme = theme === <span class="str">'dark'</span> ? <span class="str">'light'</span> : <span class="str">'dark'</span>
+    <span class="fn">applyTheme</span>(next)           <span class="cmt">// мгновенно применить</span>
+
+    <span class="kw">const</span> token = localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>)
+    <span class="kw">if</span> (token) {
+      <span class="cmt">// Сохранить на сервере в фоне</span>
+      <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/settings'</span>, {
+        method:  <span class="str">'PATCH'</span>,
+        headers: {
+          <span class="str">'Content-Type'</span>:  <span class="str">'application/json'</span>,
+          <span class="str">'Authorization'</span>: <span class="str">`Bearer ${token}`</span>
+        },
+        body: JSON.<span class="fn">stringify</span>({ theme: next })
+      })
+    }
+  }
+
+  <span class="kw">return</span> { theme, toggle }
+}
+</code></pre>
+        <div class="tip">
+          <strong>💡 Стратегия: localStorage + сервер</strong><br>
+          1. При смене темы — сразу применяем (localStorage, никакой задержки)<br>
+          2. В фоне — отправляем на сервер<br>
+          3. При следующем входе — загружаем с сервера, перезаписываем localStorage<br>
+          Пользователь не ждёт, данные синхронизированы между устройствами.
+        </div>
+
+        <div class="file-header"><span>frontend/src/App.tsx — подключить useTheme</span></div>
+        <pre><code><span class="kw">import</span> { <span class="fn">useTheme</span> } <span class="kw">from</span> <span class="str">'./hooks/useTheme'</span>
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">const</span> { theme, toggle } = <span class="fn">useTheme</span>()
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">data-theme</span>={theme}<span class="tag">&gt;</span>   <span class="cmt">// CSS переменные реагируют на data-theme</span>
+      <span class="cmt">{'...'}</span>
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span>={toggle}<span class="tag">&gt;</span>
+        {theme === <span class="str">'dark'</span> ? <span class="str">'☀️ Светлая'</span> : <span class="str">'🌙 Тёмная'</span>}
+      <span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ИТОГ ── -->
+  <section>
+    <div class="section-label">Итог</div>
+    <h2>📋 Итоговая структура</h2>
+    <pre><code>backend/src/
+└── routes/
+    ├── notifications.ts  <span class="cmt">← GET + PATCH /read-all</span>
+    └── settings.ts       <span class="cmt">← GET + PATCH, upsert темы</span>
+
+prisma/schema.prisma:
+  + Notification          <span class="cmt">← уведомления пользователя</span>
+  + UserSettings          <span class="cmt">← theme, @unique(userId)</span>
+
+frontend/src/
+└── hooks/
+    ├── useCountdown.ts       <span class="cmt">← setInterval + clearInterval</span>
+    ├── useNotifications.ts   <span class="cmt">← polling каждые 30 сек</span>
+    └── useTheme.ts           <span class="cmt">← localStorage + сервер</span>
+
+└── components/
+    ├── CountdownBanner.tsx   <span class="cmt">← таймер с pad()</span>
+    └── NotificationBell.tsx  <span class="cmt">← бейдж + дропдаун</span>
+</code></pre>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>Реализуйте <code class="inline">useCountdown</code> и <code class="inline">CountdownBanner</code>. Измените <code class="inline">SALE_END</code> на дату через 1 минуту — таймер должен остановиться и компонент скрыться.</li>
+        <li>Реализуйте уведомления. Вручную создайте запись в таблице <code class="inline">Notification</code> через Prisma Studio и убедитесь что бейдж отображает число.</li>
+        <li>Реализуйте сохранение темы. Смените тему, выйдите из системы, войдите снова — тема должна восстановиться с сервера.</li>
+        <li>Откройте приложение в двух вкладках. Смените тему в первой — как заставить вторую тоже обновиться? (Подсказка: события <code class="inline">storage</code> в браузере.)</li>
+        <li class="star">⭐ Добавьте уведомление «Ваш заказ принят» когда пользователь нажимает «Оформить заказ» в корзине (бэкенд создаёт запись в Notification).</li>
+        <li class="star">⭐ Измените polling с 30 секунд на WebSocket или SSE (Server-Sent Events) — что это даёт пользователю?</li>
+        <li class="star">⭐⭐ Что произойдёт если <code class="inline">clearInterval</code> не вызвать? Откройте вкладку, подождите 1 минуту, затем перейдите на другую страницу — сколько раз в секунду будет работать таймер?</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_06.html" class="btn-nav">← Лаб. №6</a>
+    <div class="progress-bar">
+      Лаб. работа 7 из 8
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_08.html" class="btn-nav primary">Лаб. №8 →</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>

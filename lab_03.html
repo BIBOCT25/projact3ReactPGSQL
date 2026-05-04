@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лаб. работа №3 — Первый React-компонент</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --card: #1c2230; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #bc8cff; --orange: #ffa657; --code-bg: #0d1117;
+  }
+  body.light {
+    --bg: #f6f8fa; --surface: #ffffff; --card: #f0f6fc; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #636c76; --accent: #0969da;
+    --green: #1a7f37; --yellow: #9a6700; --red: #d1242f;
+    --purple: #8250df; --orange: #bc4c00; --code-bg: #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background .3s, color .3s; }
+  header { background: linear-gradient(135deg, #0d2137 0%, #0a3d62 100%); padding: 40px 24px 32px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+  body.light header { background: linear-gradient(135deg, #ddeeff 0%, #b8d8f8 100%); }
+  .lab-badge { display: inline-block; background: rgba(88,166,255,.15); border: 1px solid rgba(88,166,255,.4); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; letter-spacing: .5px; }
+  header h1 { font-size: clamp(22px, 4vw, 34px); color: var(--text); margin-bottom: 8px; }
+  header p  { color: var(--text-muted); font-size: 15px; max-width: 640px; margin: 0 auto; }
+  .nav-labs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+  .nav-labs a { padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; background: rgba(255,255,255,.07); color: var(--text-muted); border: 1px solid var(--border); transition: .2s; }
+  .nav-labs a:hover, .nav-labs a.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .theme-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: .2s; }
+  .theme-btn:hover { background: rgba(255,255,255,.2); }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  h2 { font-size: 22px; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; color: var(--accent); margin: 24px 0 10px; }
+  p { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .theory { background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .theory strong { color: var(--accent); }
+  .important { background: rgba(248,81,73,.07); border-left: 3px solid var(--red); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .tip { background: rgba(63,185,80,.07); border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  .warn { background: rgba(210,153,34,.07); border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 20px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin-bottom: 16px; tab-size: 2; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+  .inline { background: var(--card); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; } .fn  { color: #d2a8ff; } .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; } .num { color: #79c0ff; }
+  .cls { color: #ffa657; } .ann { color: #3fb950; } .prop { color: #79c0ff; }
+  .tag { color: #7ee787; } .attr { color: #ffa657; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 32px; }
+  .step-num { min-width: 36px; height: 36px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .step-body p  { color: var(--text-muted); margin-bottom: 10px; font-size: 14.5px; }
+  .file-header { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 10px 16px; font-size: 13px; color: var(--text-muted); }
+  .file-header span { color: var(--accent); font-family: monospace; }
+  .file-header + pre { border-radius: 0 0 10px 10px; margin-top: 0; }
+  /* Визуализация компонента */
+  .mock-ui { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .mock-ui .mock-title { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+  .mock-cards { display: flex; gap: 12px; flex-wrap: wrap; }
+  .mock-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; width: 160px; }
+  .mock-card .mc-img { height: 80px; background: rgba(88,166,255,.1); border-radius: 6px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .mock-card .mc-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .mock-card .mc-price { font-size: 15px; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
+  .mock-card .mc-btn { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: default; width: 100%; }
+  .mock-loader { display: flex; gap: 12px; }
+  .mock-loader .ml-box { background: rgba(255,255,255,.05); border-radius: 8px; width: 160px; height: 160px; animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
+  /* Диаграмма состояний */
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin-bottom: 20px; }
+  .flow-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 13px; text-align: center; }
+  .flow-box .fb-label { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 3px; }
+  .flow-box .fb-val { font-weight: 700; color: var(--accent); }
+  .flow-arrow { color: var(--text-muted); font-size: 20px; padding: 0 8px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: var(--card); color: var(--text-muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  .ref-table-wrap { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; }
+  .ref-table-wrap table { margin: 0; }
+  .ref-table-wrap th { position: sticky; top: 0; z-index: 1; }
+  .cat-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .cat-Кнопки      { background: rgba(88,166,255,.15); color: #58a6ff; }
+  .cat-Карточки    { background: rgba(188,140,255,.15); color: #bc8cff; }
+  .cat-Фильтры     { background: rgba(210,153,34,.15);  color: #d29922; }
+  .cat-Корзина     { background: rgba(63,185,80,.15);   color: #3fb950; }
+  .cat-Таймеры     { background: rgba(248,81,73,.15);   color: #f85149; }
+  .cat-Формы       { background: rgba(255,166,87,.15);  color: #ffa657; }
+  .cat-Навигация   { background: rgba(88,166,255,.12);  color: #79c0ff; }
+  .cat-Слайдеры    { background: rgba(188,140,255,.12); color: #d2a8ff; }
+  .cat-Уведомления { background: rgba(63,185,80,.12);   color: #56d364; }
+  .cat-UX-мелочи   { background: rgba(255,166,87,.12);  color: #ffa657; }
+  .cat-FAQ         { background: rgba(210,153,34,.12);  color: #e3b341; }
+  .tasks { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .tasks h3 { color: var(--yellow); margin-top: 0; }
+  .tasks ol { padding-left: 20px; }
+  .tasks li { padding: 6px 0; color: var(--text); font-size: 14.5px; }
+  .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; border: 2px solid var(--accent); color: var(--accent); background: transparent; }
+  .btn-nav:hover { background: var(--accent); color: #fff; }
+  .btn-nav.primary { background: var(--accent); color: #fff; }
+  .btn-nav.primary:hover { opacity: .85; }
+  .progress-bar { text-align: center; color: var(--text-muted); font-size: 13px; }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-btn" id="themeBtn">☀️ Светлая</button>
+  <div class="lab-badge">Лабораторная работа</div>
+  <h1>№3 — Первый React-компонент</h1>
+  <p>useState, useEffect, fetch — загружаем товары с сервера и показываем карточки</p>
+  <nav class="nav-labs">
+    <a href="index.html" style="font-size:11px;padding:5px 9px">🏠</a>
+    <a href="lab_01.html">1</a>
+    <a href="lab_02.html">2</a>
+    <a href="lab_03.html" class="active">3</a>
+    <a href="lab_04.html">4</a>
+    <a href="lab_05.html">5</a>
+    <a href="lab_06.html">6</a>
+    <a href="lab_07.html">7</a>
+    <a href="lab_08.html">8</a>
+    <a href="lab_09.html">9</a>
+    <a href="lab_10.html">10</a>
+    <a href="lab_11.html">11</a>
+    <a href="lab_12.html">12</a>
+    <a href="lab_13.html">13</a>
+    <a href="lab_14.html">14</a>
+    <a href="lab_15.html">15</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── ЦЕЛЬ ── -->
+  <section>
+    <div class="section-label">Цель работы</div>
+    <h2>🎯 Что мы сделаем</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--green)">✅ В итоге получим</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li>Страницу каталога с карточками товаров</li>
+          <li>Данные загружаются с нашего Express-сервера</li>
+          <li>Экран загрузки (skeleton) пока данные идут</li>
+          <li>Обработка ошибки если сервер недоступен</li>
+          <li>Кнопка «В корзину» с отправкой POST-запроса</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--accent)">🔑 Новые понятия</h3>
+        <ul style="padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2">
+          <li><strong>useState</strong> — переменная, изменение которой перерисовывает компонент</li>
+          <li><strong>useEffect</strong> — код, который выполняется после рендера</li>
+          <li><strong>fetch</strong> — отправить HTTP-запрос из браузера</li>
+          <li><strong>Props</strong> — параметры, которые передаются компоненту</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Макет того что получится -->
+    <div class="mock-ui">
+      <div class="mock-title">Так будет выглядеть результат</div>
+      <div class="mock-cards">
+        <div class="mock-card">
+          <div class="mc-img">👟</div>
+          <div class="mc-name">Кроссовки Nike</div>
+          <div class="mc-price">4 990 ₽</div>
+          <button class="mc-btn">В корзину</button>
+        </div>
+        <div class="mock-card">
+          <div class="mc-img">👕</div>
+          <div class="mc-name">Футболка Adidas</div>
+          <div class="mc-price">1 290 ₽</div>
+          <button class="mc-btn">В корзину</button>
+        </div>
+        <div class="mock-card">
+          <div class="mc-img">🎒</div>
+          <div class="mc-name">Рюкзак Herschel</div>
+          <div class="mc-price">3 490 ₽</div>
+          <button class="mc-btn">В корзину</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ТЕОРИЯ: ХУКИ ── -->
+  <section>
+    <div class="section-label">Теория</div>
+    <h2>🪝 Хуки React: useState и useEffect</h2>
+
+    <div class="theory">
+      <strong>Хук (Hook)</strong> — это специальная функция React, которая добавляет возможности компоненту.
+      Имена всегда начинаются с <code class="inline">use</code>.
+      Два самых важных хука — <code class="inline">useState</code> и <code class="inline">useEffect</code>.
+    </div>
+
+    <h3>useState — реактивная переменная</h3>
+    <p>Обычная переменная в JS не перерисовывает экран при изменении. <code class="inline">useState</code> — перерисовывает.</p>
+    <div class="card">
+      <table>
+        <tr><th>Обычная переменная</th><th>useState</th></tr>
+        <tr>
+          <td><code>let count = 0<br>count = count + 1<br><span style="color:var(--red)">// экран не обновится</span></code></td>
+          <td><code>const [count, setCount] = useState(0)<br>setCount(count + 1)<br><span style="color:var(--green)">// экран обновится автоматически</span></code></td>
+        </tr>
+      </table>
+    </div>
+
+    <pre><code><span class="cmt">// Синтаксис useState:</span>
+<span class="kw">const</span> [<span class="var">значение</span>, <span class="fn">функция_изменения</span>] = <span class="fn">useState</span>(<span class="var">начальное_значение</span>)
+
+<span class="cmt">// Примеры:</span>
+<span class="kw">const</span> [count,    setCount]    = <span class="fn">useState</span>(<span class="num">0</span>)          <span class="cmt">// число</span>
+<span class="kw">const</span> [loading,  setLoading]  = <span class="fn">useState</span>(<span class="kw">true</span>)        <span class="cmt">// булево</span>
+<span class="kw">const</span> [products, setProducts] = <span class="fn">useState</span>([])          <span class="cmt">// массив</span>
+<span class="kw">const</span> [error,    setError]    = <span class="fn">useState</span>(<span class="kw">null</span>)         <span class="cmt">// null или строка</span>
+</code></pre>
+
+    <h3>useEffect — побочные эффекты</h3>
+    <p>Используется для кода, который должен выполниться <em>после</em> того, как компонент появился на экране: загрузка данных, подписки на события, таймеры.</p>
+
+    <pre><code><span class="cmt">// Синтаксис useEffect:</span>
+<span class="fn">useEffect</span>(() =&gt; {
+  <span class="cmt">// этот код запустится после рендера</span>
+}, [<span class="var">зависимости</span>])
+
+<span class="cmt">// [] — пустой массив = запустить ОДИН раз при монтировании компонента</span>
+<span class="cmt">// [id] — запускать при каждом изменении переменной id</span>
+<span class="cmt">// без [] — запускать при КАЖДОМ рендере (опасно!)</span>
+</code></pre>
+
+    <div class="flow">
+      <div class="flow-box"><div class="fb-label">1. Компонент</div><div class="fb-val">появился</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-label">2. React</div><div class="fb-val">рендерит HTML</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-label">3. useEffect</div><div class="fb-val">запускается</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-label">4. fetch</div><div class="fb-val">загружает данные</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-label">5. setState</div><div class="fb-val">перерисовка</div></div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 1: НАСТРОЙКА PROXY ── -->
+  <section>
+    <div class="section-label">Шаг 1</div>
+    <h2>⚙️ Настроить proxy для fetch</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Добавить proxy в vite.config.ts</h4>
+        <p>Без proxy React (порт 5173) не может обращаться к Express (порт 3001) из-за ограничений браузера (CORS).
+        Vite умеет проксировать запросы — перенаправлять <code class="inline">/api/*</code> на наш сервер.</p>
+        <div class="file-header"><span>frontend/vite.config.ts</span></div>
+        <pre><code><span class="kw">import</span> { defineConfig } <span class="kw">from</span> <span class="str">'vite'</span>
+<span class="kw">import</span> react <span class="kw">from</span> <span class="str">'@vitejs/plugin-react'</span>
+
+<span class="kw">export default</span> <span class="fn">defineConfig</span>({
+  plugins: [<span class="fn">react</span>()],
+  server: {
+    proxy: {
+      <span class="str">'/api'</span>: {
+        target: <span class="str">'http://localhost:3001'</span>, <span class="cmt">// адрес нашего Express-сервера</span>
+        changeOrigin: <span class="kw">true</span>,             <span class="cmt">// менять заголовок Origin</span>
+      }
+    }
+  }
+})
+</code></pre>
+        <div class="tip">
+          <strong>💡 Теперь</strong> вместо <code class="inline">fetch('http://localhost:3001/api/products')</code><br>
+          можно писать просто <code class="inline">fetch('/api/products')</code> — короче и удобнее.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 2: API-КЛИЕНТ ── -->
+  <section>
+    <div class="section-label">Шаг 2</div>
+    <h2>🌐 Создаём API-клиент</h2>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Вынести fetch-запросы в отдельный файл</h4>
+        <p>Хорошая практика — держать все обращения к серверу в одном месте, а не разбрасывать <code class="inline">fetch</code> по компонентам.</p>
+        <div class="file-header"><span>frontend/src/api/products.ts</span></div>
+        <pre><code><span class="cmt">// Тип товара — описываем форму данных которые приходят с сервера</span>
+<span class="kw">export interface</span> <span class="cls">Product</span> {
+  id:       number
+  name:     string
+  price:    number
+  oldPrice: number | <span class="kw">null</span>  <span class="cmt">// может быть null если скидки нет</span>
+  stock:    number
+}
+
+<span class="cmt">// Получить все товары</span>
+<span class="kw">export async function</span> <span class="fn">fetchProducts</span>(): <span class="cls">Promise</span>&lt;<span class="cls">Product</span>[]&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/products'</span>)
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">'Ошибка загрузки товаров'</span>) <span class="cmt">// бросаем ошибку если 4xx/5xx</span>
+  <span class="kw">return</span> res.<span class="fn">json</span>()
+}
+
+<span class="cmt">// Добавить товар в корзину</span>
+<span class="kw">export async function</span> <span class="fn">addToCart</span>(productId: number): <span class="cls">Promise</span>&lt;<span class="kw">void</span>&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/cart'</span>, {
+    method:  <span class="str">'POST'</span>,
+    headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+    body:    JSON.<span class="fn">stringify</span>({ productId })
+    <span class="cmt">// JSON.stringify превращает объект { productId: 1 }
+    // в строку '{"productId":1}' для отправки</span>
+  })
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">'Не удалось добавить в корзину'</span>)
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 3: КОМПОНЕНТ КАРТОЧКИ ── -->
+  <section>
+    <div class="section-label">Шаг 3</div>
+    <h2>🃏 Компонент ProductCard</h2>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Создать карточку товара</h4>
+        <p>Компонент получает данные через <strong>props</strong> (параметры) и рисует HTML. Кнопка вызывает callback переданный родителем.</p>
+        <div class="file-header"><span>frontend/src/components/ProductCard.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="cls">Product</span>, <span class="fn">addToCart</span> } <span class="kw">from</span> <span class="str">'../api/products'</span>
+
+<span class="cmt">// Описываем props — что компонент принимает снаружи</span>
+<span class="kw">interface</span> <span class="cls">Props</span> {
+  product:      <span class="cls">Product</span>        <span class="cmt">// данные товара</span>
+  onCartChange: () =&gt; <span class="kw">void</span>    <span class="cmt">// функция которую вызовем после добавления</span>
+}
+
+<span class="kw">export function</span> <span class="fn">ProductCard</span>({ product, onCartChange }: <span class="cls">Props</span>) {
+  <span class="cmt">// Локальное состояние — идёт ли добавление прямо сейчас</span>
+  <span class="kw">const</span> [adding, setAdding] = <span class="fn">useState</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> [added,  setAdded]  = <span class="fn">useState</span>(<span class="kw">false</span>)
+
+  <span class="kw">const</span> <span class="fn">handleAdd</span> = <span class="kw">async</span> () =&gt; {
+    <span class="fn">setAdding</span>(<span class="kw">true</span>)          <span class="cmt">// показать спиннер</span>
+    <span class="kw">try</span> {
+      <span class="kw">await</span> <span class="fn">addToCart</span>(product.id)
+      <span class="fn">setAdded</span>(<span class="kw">true</span>)          <span class="cmt">// показать галочку</span>
+      <span class="fn">onCartChange</span>()          <span class="cmt">// сообщить родителю — пусть обновит счётчик</span>
+      setTimeout(() =&gt; <span class="fn">setAdded</span>(<span class="kw">false</span>), <span class="num">2000</span>) <span class="cmt">// через 2с вернуть обычный вид</span>
+    } <span class="kw">finally</span> {
+      <span class="fn">setAdding</span>(<span class="kw">false</span>)
+    }
+  }
+
+  <span class="cmt">// Форматирование цены: 4990 → "4 990 ₽"</span>
+  <span class="kw">const</span> <span class="fn">fmt</span> = (n: number) =&gt; n.<span class="fn">toLocaleString</span>(<span class="str">'ru-RU'</span>) + <span class="str">' ₽'</span>
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"product-card"</span><span class="tag">&gt;</span>
+      <span class="cmt">{'/* Картинка-заглушка — в реальном проекте будет img */'}</span>
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"card-img"</span><span class="tag">&gt;</span>🛍️<span class="tag">&lt;/div&gt;</span>
+
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"card-body"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;h3</span> <span class="attr">className</span>=<span class="str">"card-name"</span><span class="tag">&gt;</span>{product.name}<span class="tag">&lt;/h3&gt;</span>
+
+        <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"card-price"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"price-current"</span><span class="tag">&gt;</span>{<span class="fn">fmt</span>(product.price)}<span class="tag">&lt;/span&gt;</span>
+          {product.oldPrice &amp;&amp; (  <span class="cmt">// рендерить только если oldPrice не null</span>
+            <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"price-old"</span><span class="tag">&gt;</span>{<span class="fn">fmt</span>(product.oldPrice)}<span class="tag">&lt;/span&gt;</span>
+          )}
+        <span class="tag">&lt;/div&gt;</span>
+
+        <span class="tag">&lt;button</span>
+          <span class="attr">className</span>=<span class="str">`btn-cart ${added ? 'btn-added' : ''}`</span>
+          <span class="attr">onClick</span>={handleAdd}
+          <span class="attr">disabled</span>={adding || product.stock === <span class="num">0</span>}
+        <span class="tag">&gt;</span>
+          {adding ? <span class="str">'Добавляем…'</span> : added ? <span class="str">'✓ Добавлено'</span> : <span class="str">'В корзину'</span>}
+          <span class="cmt">{'/* тернарный оператор: если adding → "Добавляем…" */'}</span>
+        <span class="tag">&lt;/button&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 4: КАТАЛОГ ── -->
+  <section>
+    <div class="section-label">Шаг 4</div>
+    <h2>📋 Компонент каталога — загрузка данных</h2>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Создать страницу каталога</h4>
+        <p>Это главный компонент. Он загружает товары с сервера и передаёт их в <code class="inline">ProductCard</code>.</p>
+        <div class="file-header"><span>frontend/src/pages/CatalogPage.tsx</span></div>
+        <pre><code><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> { <span class="cls">Product</span>, <span class="fn">fetchProducts</span> } <span class="kw">from</span> <span class="str">'../api/products'</span>
+<span class="kw">import</span> { <span class="cls">ProductCard</span> } <span class="kw">from</span> <span class="str">'../components/ProductCard'</span>
+
+<span class="kw">export function</span> <span class="fn">CatalogPage</span>() {
+  <span class="cmt">// Три состояния загрузки данных с сервера:</span>
+  <span class="kw">const</span> [products, setProducts] = <span class="fn">useState</span>&lt;<span class="cls">Product</span>[]&gt;([]) <span class="cmt">// данные</span>
+  <span class="kw">const</span> [loading,  setLoading]  = <span class="fn">useState</span>(<span class="kw">true</span>)           <span class="cmt">// идёт ли загрузка</span>
+  <span class="kw">const</span> [error,    setError]    = <span class="fn">useState</span>&lt;string | <span class="kw">null</span>&gt;(<span class="kw">null</span>) <span class="cmt">// текст ошибки</span>
+  <span class="kw">const</span> [cartCount, setCartCount] = <span class="fn">useState</span>(<span class="num">0</span>)              <span class="cmt">// кол-во товаров в корзине</span>
+
+  <span class="cmt">// useEffect с [] — загрузить данные один раз при открытии страницы</span>
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetchProducts</span>()
+      .<span class="fn">then</span>(data =&gt; {
+        <span class="fn">setProducts</span>(data)  <span class="cmt">// сохранить товары в состояние</span>
+        <span class="fn">setLoading</span>(<span class="kw">false</span>)  <span class="cmt">// скрыть экран загрузки</span>
+      })
+      .<span class="fn">catch</span>(err =&gt; {
+        <span class="fn">setError</span>(err.message) <span class="cmt">// показать ошибку</span>
+        <span class="fn">setLoading</span>(<span class="kw">false</span>)
+      })
+  }, []) <span class="cmt">// [] = запустить один раз</span>
+
+  <span class="cmt">// Вызывается когда пользователь добавил товар в корзину</span>
+  <span class="kw">const</span> <span class="fn">handleCartChange</span> = () =&gt; {
+    <span class="fn">setCartCount</span>(prev =&gt; prev + <span class="num">1</span>) <span class="cmt">// prev — предыдущее значение состояния</span>
+  }
+
+  <span class="cmt">// ── РЕНДЕР ──</span>
+
+  <span class="cmt">// Если загружается — показать skeleton (анимированные заглушки)</span>
+  <span class="kw">if</span> (loading) <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"catalog-grid"</span><span class="tag">&gt;</span>
+      {[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>].<span class="fn">map</span>(i =&gt; <span class="tag">&lt;div</span> <span class="attr">key</span>={i} <span class="attr">className</span>=<span class="str">"skeleton-card"</span> <span class="tag">/&gt;</span>)}
+    <span class="tag">&lt;/div&gt;</span>
+  )
+
+  <span class="cmt">// Если ошибка — показать сообщение</span>
+  <span class="kw">if</span> (error) <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"error-box"</span><span class="tag">&gt;</span>
+      ⚠️ {error}. Убедитесь что сервер запущен.
+    <span class="tag">&lt;/div&gt;</span>
+  )
+
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;header</span> <span class="attr">className</span>=<span class="str">"page-header"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;h1&gt;</span>Каталог<span class="tag">&lt;/h1&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attr">className</span>=<span class="str">"cart-badge"</span><span class="tag">&gt;</span>🛒 {cartCount}<span class="tag">&lt;/span&gt;</span>
+      <span class="tag">&lt;/header&gt;</span>
+
+      <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"catalog-grid"</span><span class="tag">&gt;</span>
+        {products.<span class="fn">map</span>(product =&gt; (
+          <span class="cmt">{'/* .map() — обход массива, для каждого товара рисуем карточку */'}</span>
+          <span class="tag">&lt;ProductCard</span>
+            <span class="attr">key</span>={product.id}          <span class="cmt">// key — уникальный ключ для React</span>
+            <span class="attr">product</span>={product}         <span class="cmt">// передаём товар как prop</span>
+            <span class="attr">onCartChange</span>={handleCartChange}
+          <span class="tag">/&gt;</span>
+        ))}
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ШАГ 5: СТИЛИ ── -->
+  <section>
+    <div class="section-label">Шаг 5</div>
+    <h2>🎨 Стили компонентов</h2>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Добавить CSS</h4>
+        <div class="file-header"><span>frontend/src/index.css</span></div>
+        <pre><code><span class="cmt">/* Сетка каталога */</span>
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+<span class="cmt">/* Карточка товара */</span>
+.product-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+}
+
+.card-img {
+  height: 160px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+.card-body   { padding: 16px; }
+.card-name   { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.card-price  { display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px; }
+.price-current { font-size: 18px; font-weight: 700; color: #1d4ed8; }
+.price-old  { font-size: 13px; color: #9ca3af; text-decoration: line-through; }
+
+<span class="cmt">/* Кнопка корзины */</span>
+.btn-cart {
+  width: 100%;
+  padding: 10px;
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-cart:hover:not(:disabled) { background: #1e40af; }
+.btn-cart:disabled  { background: #9ca3af; cursor: default; }
+.btn-cart.btn-added { background: #16a34a; }
+
+<span class="cmt">/* Skeleton — анимация загрузки */</span>
+.skeleton-card {
+  height: 260px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+<span class="cmt">/* Шапка страницы */</span>
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.cart-badge {
+  background: #1d4ed8;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Подключить страницу в App.tsx</h4>
+        <div class="file-header"><span>frontend/src/App.tsx</span></div>
+        <pre><code><span class="kw">import</span> { <span class="cls">CatalogPage</span> } <span class="kw">from</span> <span class="str">'./pages/CatalogPage'</span>
+<span class="kw">import</span> <span class="str">'./index.css'</span>
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="str">"app"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;CatalogPage /&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  )
+}
+
+<span class="kw">export default</span> App
+</code></pre>
+        <pre><code><span class="cmt"># Запустить оба сервера:</span>
+<span class="cmt"># Терминал 1:</span>  cd backend  &amp;&amp; npx nodemon src/index.ts
+<span class="cmt"># Терминал 2:</span>  cd frontend &amp;&amp; npm run dev
+
+<span class="cmt"># Открыть: http://localhost:5173</span>
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ИТОГ ── -->
+  <section>
+    <div class="section-label">Итог</div>
+    <h2>📋 Итоговая структура</h2>
+    <pre><code>frontend/src/
+├── api/
+│   └── products.ts        <span class="cmt">← fetchProducts(), addToCart()</span>
+├── components/
+│   └── ProductCard.tsx    <span class="cmt">← карточка одного товара</span>
+├── pages/
+│   └── CatalogPage.tsx    <span class="cmt">← загрузка списка + сетка карточек</span>
+├── App.tsx                <span class="cmt">← корневой компонент</span>
+└── index.css              <span class="cmt">← стили</span>
+</code></pre>
+
+    <div class="warn">
+      <strong>🔁 Поток данных в React — только вниз:</strong><br>
+      <code class="inline">CatalogPage</code> (данные) → <code class="inline">ProductCard</code> (отображение)<br>
+      Если <code class="inline">ProductCard</code> хочет сообщить родителю — он вызывает функцию <code class="inline">onCartChange</code> переданную через props.
+      Это называется <em>«поднятие состояния»</em>.
+    </div>
+  </section>
+
+  <!-- ── ЗАДАНИЯ ── -->
+  <section>
+    <div class="tasks">
+      <h3>📝 Задания для выполнения</h3>
+      <ol>
+        <li>Настройте proxy в <code class="inline">vite.config.ts</code>, создайте все файлы из шагов 2–6, запустите оба сервера и убедитесь что карточки товаров появились на экране.</li>
+        <li>Нажмите «В корзину» — кнопка должна стать зелёной «✓ Добавлено» на 2 секунды. Счётчик в шапке должен увеличиться.</li>
+        <li>Остановите Express-сервер и перезагрузите страницу — должно появиться сообщение об ошибке, а не пустой экран.</li>
+        <li>Добавьте в <code class="inline">ProductCard</code> отображение количества на складе: если <code class="inline">stock === 0</code> — показать текст «Нет в наличии» вместо кнопки.</li>
+        <li class="star">⭐ Добавьте компонент <code class="inline">ProductCount</code> — просто показывает «Найдено: N товаров» над сеткой.</li>
+        <li class="star">⭐ Добавьте сортировку: две кнопки «По цене ↑» и «По цене ↓». При клике — пересортировать массив <code class="inline">products</code> через <code class="inline">setProducts([...products].sort(...))</code>.</li>
+        <li class="star">⭐⭐ Почему нельзя писать <code class="inline">useEffect(async () =&gt; { ... })</code>? Как правильно делать async-запрос внутри useEffect?</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── НАВИГАЦИЯ ── -->
+  <div class="bottom-nav">
+    <a href="lab_02.html" class="btn-nav">← Лаб. №2</a>
+    <div class="progress-bar">
+      Лаб. работа 3 из 8
+      <div class="progress-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <a href="lab_04.html" class="btn-nav primary">Лаб. №4 →</a>
+  </div>
+
+</main>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    btn.textContent = t === 'light' ? '🌙 Тёмная' : '☀️ Светлая';
+    localStorage.setItem('labTheme', t);
+  }
+  btn.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+  applyTheme(localStorage.getItem('labTheme') || 'dark');
+</script>
+
+</body>
+</html>
